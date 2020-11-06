@@ -1,0 +1,133 @@
+bids_dir: '/project/6050199/akhanf/cfmm-bids/data/Kohler/HcECT/bids'
+output_dir: '.'
+
+participant_label:
+ - '005'
+
+#enable printing debug statements during parsing -- disable if generating dag visualization
+debug: False
+
+derivatives: False #will search in bids/derivatives if True; can also be path(s) to derivatives datasets
+
+#list of analysis levels in the bids app 
+analysis_levels: &analysis_levels
+ - participant
+  
+
+#mapping from analysis_level to set of target rules or files
+targets_by_analysis_level:
+  participant:
+    - ''  # if '', then the first rule is run
+
+#this configures the pybids grabber - create an entry for each type of input you want to grab
+# indexed by name of input
+#   dictionary for each input is passed directly to pybids get()
+#    https://bids-standard.github.io/pybids/generated/bids.layout.BIDSLayout.html#bids.layout.BIDSLayout.get
+
+
+pybids_inputs:
+  T2w:
+    filters:
+      suffix: 'T2w'
+      extension: '.nii.gz'
+      datatype: 'anat'
+      invalid_filters: 'allow'
+      space: null
+    wildcards:
+      - subject
+      - session
+      - acquisition
+      - run
+
+  dwi:
+    filters:
+      suffix: 'dwi'
+      extension: '.nii.gz'
+      invalid_filters: 'allow'
+      datatype: 'dwi'
+    wildcards:
+      - subject
+      - session
+      - acquisition
+      - run
+      - dir
+
+  T1w:
+    filters:
+      suffix: 'T1w'
+      extension: '.nii.gz'
+      datatype: 'anat'
+      invalid_filters: 'allow'
+      space: null
+    wildcards:
+      - subject
+      - session
+      - acquisition
+      - run
+
+
+
+#configuration for the command-line parameters to make available
+# passed on the argparse add_argument()
+parse_args:
+
+#---  core BIDS-app options --- (do not modify below) 
+
+  bids_dir:
+    help: The directory with the input dataset formatted according 
+          to the BIDS standard.
+
+  output_dir:
+    help: The directory where the output files 
+          should be stored. If you are running group level analysis
+          this folder should be prepopulated with the results of the
+          participant level analysis.
+
+  analysis_level: 
+    help: Level of the analysis that will be performed. 
+    choices: *analysis_levels
+
+  --participant_label:
+    help: The label(s) of the participant(s) that should be analyzed. The label 
+          corresponds to sub-<participant_label> from the BIDS spec 
+          (so it does not include "sub-"). If this parameter is not 
+          provided all subjects should be analyzed. Multiple 
+          participants can be specified with a space separated list.
+    nargs: '+'
+
+  --exclude_participant_label:
+    help: The label(s) of the participant(s) that should be excluded. The label 
+          corresponds to sub-<participant_label> from the BIDS spec 
+          (so it does not include "sub-"). If this parameter is not 
+          provided all subjects should be analyzed. Multiple 
+          participants can be specified with a space separated list.
+    nargs: '+'
+ # custom command-line parameters can then be added, these will get added to the config
+
+
+#--- workflow specific configuration -- 
+
+singularity:
+  prepdwi: '/project/6050199/akhanf/singularity/bids-apps/khanlab_prepdwi_latest.sif'  #should use mrtrix3.0 container instead
+  ants: '/project/6050199/akhanf/singularity/ants-v2.3.1.sif'
+  fsl: '/project/6050199/akhanf/singularity/bids-apps/fsl_6.0.3_cuda9.1.sif' 
+
+
+templates:
+  CITI168:  
+    url: 'https://www.dropbox.com/s/6vkadw76okf8h2q/tpl-CITI168.tar?dl=1'
+    files:
+      - tpl-CITI168/tpl-CITI168_from-orig_to-corobl_type-itk_xfm.txt
+      - tpl-CITI168/tpl-CITI168_hemi-L_space-corobl_desc-cropped_T2w.nii.gz
+      - tpl-CITI168/tpl-CITI168_hemi-R_space-corobl_desc-cropped_T2w.nii.gz
+      - tpl-CITI168/tpl-CITI168_T1w.nii.gz
+      - tpl-CITI168/tpl-CITI168_T2w.nii.gz 
+
+
+template: CITI168
+template_T1w: 'resources/tpl-{template}/tpl-{template}_T1w.nii.gz'
+template_xfm_corobl: 'resources/tpl-{template}/tpl-{template}_from-orig_to-corobl_type-itk_xfm.txt'
+template_crop_ref: 'resources/tpl-{template}/tpl-{template}_hemi-L_space-corobl_desc-cropped_T2w.nii.gz'
+
+
+

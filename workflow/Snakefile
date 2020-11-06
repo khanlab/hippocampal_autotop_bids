@@ -1,0 +1,43 @@
+#---- snakebids boilerplate
+
+import snakebids
+from snakebids import bids
+
+configfile: 'config/snakebids.yml'
+
+#writes inputs_config.yml and updates config dict
+snakebids.generate_inputs_config(config)
+
+#this adds constraints to the bids naming
+wildcard_constraints:  **snakebids.get_wildcard_constraints(config)
+
+#----
+
+# verify URL works, has problem downloading on graham.. 
+rule download_template:
+    params: 
+        url = config['templates']['CITI168']['url'],
+        output_folder = 'resources'
+    output: ['resources/{}'.format(f) for f in config['templates']['CITI168']['files']]
+    shell: 'wget {params.url} -O - | tar -xv -C {params.output_folder}'
+
+include: 'rules/reg_t1_to_template.smk'
+#rule all:
+#    input: 
+#        brain = expand(bids(root='results',datatype='anat',desc='brain',suffix='T1w.nii.gz',**config['subj_wildcards']),
+#                 zip,**config['input_zip_lists']['T1w']),
+
+rule import_T2w:
+    input: config['input_path']['T2w']
+    output: bids(root='results',datatype='anat',suffix='T1w.nii.gz',**config['input_wildcards']['T2w'])
+    shell: 'cp -v {input} {output}'
+
+
+
+
+#t2w processing steps:
+#  N4
+#  
+
+
+
