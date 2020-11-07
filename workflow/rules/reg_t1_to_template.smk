@@ -1,15 +1,12 @@
-wildcard_constraints:
-    desc='[a-zA-Z0-9]+',
-    template='[a-zA-Z0-9]+',
 
 #just grab the first T1w for now:
-rule import_subj_t1:
+rule import_t1:
     input: lambda wildcards: expand(config['input_path']['T1w'],zip,**snakebids.filter_list(config['input_zip_lists']['T1w'],wildcards))[0]
     output: bids(root='work/reg_t1_to_template',**config['subj_wildcards'],suffix='T1w.nii.gz')
     group: 'preproc'
     shell: 'cp {input} {output}'
 
-rule n4biasfield:
+rule n4_t1:
     input: 
         t1 = bids(root='work/reg_t1_to_template',**config['subj_wildcards'],suffix='T1w.nii.gz'),
     output:
@@ -68,6 +65,7 @@ rule warp_t1_to_corobl_crop:
     shell:
         'ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS={threads} '
         'antsApplyTransforms -d 3 --interpolation Linear -i {input.t1} -o {output.t1} -r {input.ref}  -t {input.xfm}' 
+
 
 
 """

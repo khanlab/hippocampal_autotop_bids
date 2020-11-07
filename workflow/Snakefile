@@ -12,20 +12,35 @@ snakebids.generate_inputs_config(config)
 wildcard_constraints:  **snakebids.get_wildcard_constraints(config)
 
 #----
+wildcard_constraints:
+    desc='[a-zA-Z0-9]+',
+    template='[a-zA-Z0-9]+',
+    space='[a-zA-Z0-9]+',
 
-# verify URL works, has problem downloading on graham.. 
-rule download_template:
-    params: 
-        url = config['templates']['CITI168']['url'],
-        output_folder = 'resources'
-    output: ['resources/{}'.format(f) for f in config['templates']['CITI168']['files']]
-    shell: 'wget {params.url} -O - | tar -xv -C {params.output_folder}'
 
-include: 'rules/reg_t1_to_template.smk'
-#rule all:
-#    input: 
+t2 = expand(
+                expand(
+                    bids(root='work/preproc_t2',**config['input_wildcards']['T2w'],suffix='T2w.nii.gz',
+                            desc='cropped',space='{{template}}corobl',hemi='{{hemi}}'),
+                                zip, **config['input_zip_lists']['T2w']),
+                        template=config['template'], hemi=['L','R'])
+print(t2)
+
+rule all:
+    input: 
+        t2 = expand(
+                expand(
+                    bids(root='work/preproc_t2',**config['input_wildcards']['T2w'],suffix='T2w.nii.gz',
+                            desc='cropped',space='{{template}}corobl',hemi='{{hemi}}'),
+                                zip, **config['input_zip_lists']['T2w']),
+                        template=config['template'], hemi=['L','R'])
+                        
 #        brain = expand(bids(root='results',datatype='anat',desc='brain',suffix='T1w.nii.gz',**config['subj_wildcards']),
 #                 zip,**config['input_zip_lists']['T1w']),
+
+include: 'rules/reg_t1_to_template.smk'
+include: 'rules/preproc_t2.smk'
+
 
 rule import_T2w:
     input: config['input_path']['T2w']
@@ -39,5 +54,13 @@ rule import_T2w:
 #  N4
 #  
 
+
+# verify URL works, has problem downloading on graham.. 
+rule download_template:
+    params: 
+        url = config['templates']['CITI168']['url'],
+        output_folder = 'resources'
+    output: ['resources/{}'.format(f) for f in config['templates']['CITI168']['files']]
+    shell: 'wget {params.url} -O - | tar -xv -C {params.output_folder}'
 
 
