@@ -102,15 +102,25 @@ parse_args:
           provided all subjects should be analyzed. Multiple 
           participants can be specified with a space separated list.
     nargs: '+'
+
+
+  --suffix:
+    help: 'Suffix or suffixes to run hippocampal autotop on (default: %(default)s)'
+    nargs: '+'
+    default: 
+      - T1w
+      - T2w
+      - b500
  # custom command-line parameters can then be added, these will get added to the config
 
 
 #--- workflow specific configuration -- 
 
 singularity:
-  prepdwi: '/project/6050199/akhanf/singularity/bids-apps/khanlab_prepdwi_latest.sif'  #should use mrtrix3.0 container instead
+  prepdwi: '/project/6050199/akhanf/singularity/bids-apps/khanlab_prepdwi_latest.sif'  
   ants: '/project/6050199/akhanf/singularity/ants-v2.3.1.sif'
   fsl: '/project/6050199/akhanf/singularity/bids-apps/fsl_6.0.3_cuda9.1.sif' 
+  autotop: '/home/akhanf/singularity/bids-apps/khanlab_hippocampal_autotop_bids_latest.sif'
 
 
 templates:
@@ -125,9 +135,76 @@ templates:
 
 
 template: CITI168
-template_T1w: 'resources/tpl-{template}/tpl-{template}_T1w.nii.gz'
-template_xfm_corobl: 'resources/tpl-{template}/tpl-{template}_from-orig_to-corobl_type-itk_xfm.txt'
-template_crop_ref: 'resources/tpl-{template}/tpl-{template}_hemi-L_space-corobl_desc-cropped_T2w.nii.gz'
 
+
+template_files:
+  CITI168:
+    T1w: hippocampal_autotop/atlases/CITI/CIT168_T1w_head_700um.nii.gz
+    xfm_corobl: hippocampal_autotop/atlases/CITI/CoronalOblique_rigid.txt
+    crop_ref: hippocampal_autotop/atlases/CITI/img_300umCoronalOblique_hemi-{hemi}.nii.gz
+
+suffix:
+  - T2w
+#  - b500  
+  - InvT1w
+
+
+#CNN model - mapping from image type to model
+cnn_model:
+  T2w: 'highres3dnet_large_v0.4'
+  InvT1w: 'highres3dnet_large_v0.4'
+  b500: 'highres3dnet_large_v0.6_b1000'
+  b1000: 'highres3dnet_large_v0.6_b1000'
+
+#MATLAB vs MCR
+
+use_mcr: False
+
+#if no mcr, then need to define the following:
+
+matlab_bin: '/cvmfs/restricted.computecanada.ca/easybuild/software/2017/Core/matlab/2019b/bin/matlab'
+mlm_license_file: '/cvmfs/restricted.computecanada.ca/config/licenses/matlab/inst_uwo/graham.lic'
+java_home: '/cvmfs/soft.computecanada.ca/easybuild/software/2017/Core/java/1.8.0_192/'
+
+
+autotop_outputs:
+  img: img.nii.gz
+  coord_ap: coords-AP.nii.gz
+  coord_io: coords-IO.nii.gz
+  coord_pd: coords-PD.nii.gz
+  label_niftynet: niftynet_lbl.nii.gz
+  label_postproc: labelmap-postProcess.nii.gz
+  midsurf_vtk: midSurf.vtk
+  label_subfields: subfields-BigBrain.nii.gz
+  surf_mat: surf.mat
+  unfold_mat: unfold.mat
+
+
+eddy:
+  flags:
+    verbose: True
+    repol: True
+    cnr_maps: True
+    residuals: True
+    data_is_shelled: True
+  opts:
+    mporder: 6
+    s2v_niter: 5
+    s2v_lambda: 1
+    s2v_interp: trilinear
+    ol_type: 'both'  #can be sw, gw, or both (use sw if no multi-band)
+   
+#masking options for dwi
+masking:
+  default_method: 'bet_from-b0_frac-1' #b0SyN_from-MNI152NLin2009cSym' #default method to use for brainmasking
+  methods: # list of methods (for QC report)
+    - 'bet_from-b0'
+    - 'bet_from-b0_frac-4'
+    - 'b0SyN_from-MNI152NLin2009cSym'
+  import_path: #only required if the import_mask - not implemented yet..
+    - '/path/to/mask_to_import/sub-{subject}_mask.nii.gz'
+  custom: #use this to set a custom method for a particular subject
+    #'0015': 'bet_from-b0_frac-4'
+    '0015': 'b0SyN_from-MNI152NLin2009cSym'
 
 

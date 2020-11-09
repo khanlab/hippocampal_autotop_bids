@@ -18,44 +18,32 @@ wildcard_constraints:
     space='[a-zA-Z0-9]+',
 
 
-t2 = expand(
-                expand(
-                    bids(root='work/preproc_t2',**config['input_wildcards']['T2w'],suffix='T2w.nii.gz',
-                            desc='cropped',space='{{template}}corobl',hemi='{{hemi}}'),
-                                zip, **config['input_zip_lists']['T2w']),
-                        template=config['template'], hemi=['L','R'])
-print(t2)
 
 rule all:
     input: 
-        t2 = expand(
-                expand(
-                    bids(root='work/preproc_t2',**config['input_wildcards']['T2w'],suffix='T2w.nii.gz',
-                            desc='cropped',space='{{template}}corobl',hemi='{{hemi}}'),
-                                zip, **config['input_zip_lists']['T2w']),
-                        template=config['template'], hemi=['L','R'])
-                        
-#        brain = expand(bids(root='results',datatype='anat',desc='brain',suffix='T1w.nii.gz',**config['subj_wildcards']),
-#                 zip,**config['input_zip_lists']['T1w']),
+#        autotop_dir = expand(expand(
+#            bids(root='work/autotop',**config['subj_wildcards'],suffix='autotop',
+#                desc='cropped',space='{{template}}corobl',hemi='{{hemi}}'),
+#                zip, **config['input_zip_lists']['T2w']),
+#            template=config['template'], hemi=['Lflip','R'])
+#        autotop_dir = expand(
+#            bids(root='work/autotop',**config['subj_wildcards'],suffix='autotop',
+#                desc='cropped',space='{template}corobl',hemi='{hemi}',modality='{modality}'),
+#                    subject=config['subjects'], session=config['sessions'],
+#                    template=config['template'], hemi=['Lflip','R'],modality=config['suffix'])
+        subfields = expand(bids(root='results',datatype='anat',suffix='dseg.nii.gz', desc='subfields',space='T1w',modality='{modality}', **config['subj_wildcards'], template='{template}'),
+                    subject=config['subjects'], session=config['sessions'],
+                    template=config['template'], modality=config['suffix'])
 
-include: 'rules/reg_t1_to_template.smk'
+
+
+include: 'rules/preproc_t1.smk'
 include: 'rules/preproc_t2.smk'
+include: 'rules/preproc_dwi.smk'
+include: 'rules/autotop.smk'
 
 
-rule import_T2w:
-    input: config['input_path']['T2w']
-    output: bids(root='results',datatype='anat',suffix='T1w.nii.gz',**config['input_wildcards']['T2w'])
-    shell: 'cp -v {input} {output}'
-
-
-
-
-#t2w processing steps:
-#  N4
-#  
-
-
-# verify URL works, has problem downloading on graham.. 
+# need to verify URL works, has problem downloading on graham.. 
 rule download_template:
     params: 
         url = config['templates']['CITI168']['url'],
