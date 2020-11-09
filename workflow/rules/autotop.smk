@@ -70,6 +70,7 @@ rule resample_subfields_to_T1w:
         ref = bids(root='work/preproc_t1',**config['subj_wildcards'],suffix='T1w.nii.gz')
     output:
         nii = bids(root='work/autotop',datatype='anat',suffix='dseg.nii.gz', desc='subfields',space='T1w',hemi='{hemi}',modality='{modality}', **config['subj_wildcards'],template='{template}')
+    container: config['singularity']['prepdwi']
     shell:
         'ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS={threads} '
         'antsApplyTransforms -d 3 --interpolation NearestNeighbor -i {input.nii} -o {output.nii} -r {input.ref}  -t [{input.xfm},1]' 
@@ -82,6 +83,7 @@ rule combine_lr_subfields:
         right = bids(root='work/autotop',datatype='anat',suffix='dseg.nii.gz', desc='subfields',space='T1w',hemi='R',modality='{modality}', **config['subj_wildcards'],template='{template}')
     output:
         combined = bids(root='results',datatype='anat',suffix='dseg.nii.gz', desc='subfields',space='T1w',modality='{modality}', **config['subj_wildcards'],template='{template}')
+    container: config['singularity']['prepdwi']
     shell: 'c3d {input} -add -o {output}'
  
         
