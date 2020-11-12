@@ -37,6 +37,7 @@ rule all:
 
 
 
+include: 'rules/common.smk'
 include: 'rules/preproc_t1.smk'
 include: 'rules/preproc_t2.smk'
 include: 'rules/preproc_dwi.smk'
