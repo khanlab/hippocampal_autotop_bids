@@ -1,4 +1,4 @@
 [submodule "hippocampal_autotop"]
 	path = hippocampal_autotop
-	url = https://github.com/khanlab/hippocampal_autotop
-	branch = compile_rollout
+	url = https://github.com/jordandekraker/hippocampal_autotop
+	branch = master
