@@ -19,6 +19,7 @@ wildcard_constraints:
 
 
 
+
 rule all:
     input: 
 #        autotop_dir = expand(expand(
@@ -42,14 +43,4 @@ include: 'rules/preproc_t1.smk'
 include: 'rules/preproc_t2.smk'
 include: 'rules/preproc_dwi.smk'
 include: 'rules/autotop.smk'
-
-
-# need to verify URL works, has problem downloading on graham.. 
-rule download_template:
-    params: 
-        url = config['templates']['CITI168']['url'],
-        output_folder = 'resources'
-    output: ['resources/{}'.format(f) for f in config['templates']['CITI168']['files']]
-    shell: 'wget {params.url} -O - | tar -xv -C {params.output_folder}'
-
 
