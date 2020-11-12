@@ -100,7 +100,7 @@ rule warp_t2_to_corobl_crop:
     input:
         nii = bids(root='work/preproc_t2',**config['subj_wildcards'],suffix='T2w.nii.gz',desc='preproc'),
         xfm = bids(root='work/preproc_t2',**config['subj_wildcards'],suffix='xfm.txt',from_='T2w',to='{template}corobl',desc='affine',type_='itk'),
-        ref = lambda wildcards: config['template_files'][wildcards.template]['crop_ref']
+        ref = lambda wildcards: os.path.join(config['snakemake_dir'],config['template_files'][wildcards.template]['crop_ref'])
     output: 
         nii = bids(root='work/preproc_t2',**config['subj_wildcards'],suffix='T2w.nii.gz',desc='cropped',space='{template}corobl',hemi='{hemi}'),
     container: config['singularity']['prepdwi']

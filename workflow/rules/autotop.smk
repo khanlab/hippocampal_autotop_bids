@@ -1,10 +1,9 @@
 import os
-
     
 
 #creates command based on mcr or matlab
 def get_autotop_cmd (wildcards, input, output):
-    autotop_dir = os.path.realpath('hippocampal_autotop')
+    autotop_dir = os.path.join(config['snakemake_dir'],'hippocampal_autotop')
     singularity_cmd = f"singularity exec -B {autotop_dir}:/src -e {config['singularity']['autotop']}" 
 
     if config['use_mcr'] == True:
