@@ -1,5 +1,5 @@
 # hippunfold
-BIDS App for Hippocampal AutoTop v0.2 (automated hippocampal unfolding and subfield segmentation)
+BIDS App for Hippocampal AutoTop (automated hippocampal unfolding and subfield segmentation)
 
 [![](https://images.microbadger.com/badges/version/khanlab/hippunfold.svg)](https://microbadger.com/images/khanlab/hippunfold "Get your own version badge on microbadger.com")
 [![Documentation Status](https://readthedocs.org/projects/hippunfold/badge/?version=latest)](https://hippunfold.readthedocs.io/en/latest/?badge=latest)
