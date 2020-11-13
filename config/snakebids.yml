@@ -1,8 +1,7 @@
-bids_dir: '/project/6050199/akhanf/cfmm-bids/data/Kohler/HcECT/bids'
-output_dir: '.'
+bids_dir: '/path/to/bids/dir'
+output_dir: '/path/to/output/dir' #don't use '.'
 
-participant_label:
- - '005'
+snakebids_dir: '.' #do not modify this variable -- is used to refer to files needed by the workflow when running with CLI
 
 #enable printing debug statements during parsing -- disable if generating dag visualization
 debug: False
