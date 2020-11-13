@@ -39,7 +39,7 @@ rule reg_t2_to_ref:
     container: config['singularity']['prepdwi']
     group: 'preproc'
     shell:
-        'reg_aladin -flo {input.flo} -ref {input.ref} -res {output.warped} -aff {output.xfm_ras} && '
+        'reg_aladin -flo {input.flo} -ref {input.ref} -res {output.warped} -aff {output.xfm_ras} -rigOnly -nac && '
         'c3d_affine_tool  {output.xfm_ras} -oitk {output.xfm_itk}'
 
 
@@ -66,6 +66,7 @@ rule avg_aligned_or_cp_t2:
         cmd = get_avg_or_cp_scans_cmd
     output:
         bids(root='work/preproc_t2',**config['subj_wildcards'],suffix='T2w.nii.gz',desc='preproc')
+    container: config['singularity']['prepdwi']
     group: 'preproc'
     shell: '{params.cmd}'
         
@@ -83,7 +84,7 @@ rule reg_t2_to_t1:
     container: config['singularity']['prepdwi']
     group: 'preproc'
     shell:
-        'reg_aladin -flo {input.flo} -ref {input.ref} -res {output.warped} -aff {output.xfm_ras} && '
+        'reg_aladin -flo {input.flo} -ref {input.ref} -res {output.warped} -aff {output.xfm_ras} -rigOnly -nac && '
         'c3d_affine_tool  {output.xfm_ras} -oitk {output.xfm_itk}'
 
 #now have t2 to t1 xfm, compose this with t1 to corobl xfm
