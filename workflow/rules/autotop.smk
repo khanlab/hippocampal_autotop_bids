@@ -45,6 +45,7 @@ rule run_autotop:
         out_dir = directory(bids(root='work/autotop',**config['subj_wildcards'],suffix='autotop',desc='cropped',space='{template}corobl',hemi='{hemi,Lflip|R}',modality='{modality}')),
         subfields = bids(root='work/autotop',**config['subj_wildcards'],suffix='autotop/subfields-BigBrain.nii.gz',desc='cropped',space='{template}corobl',hemi='{hemi,Lflip|R}',modality='{modality}')
     threads: 8
+    group: 'autotop'
     shell:
         'SINGULARITYENV_ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS={threads} '
         "{params.autotop_cmd}"
@@ -58,6 +59,7 @@ rule unflip_autotop_nii:
     output:
         nii = bids(root='work/autotop',**config['subj_wildcards'],suffix='autotop/{filename}.nii.gz',desc='cropped',space='{template}corobl',hemi='{hemi,L}',modality='{modality}')
     container: config['singularity']['prepdwi']
+    group: 'autotop'
     shell: 'c3d {input} -flip x {output}'
 
    
@@ -70,6 +72,7 @@ rule resample_subfields_to_T1w:
     output:
         nii = bids(root='work/autotop',datatype='anat',suffix='dseg.nii.gz', desc='subfields',space='T1w',hemi='{hemi}',modality='{modality}', **config['subj_wildcards'],template='{template}')
     container: config['singularity']['prepdwi']
+    group: 'autotop'
     shell:
         'ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS={threads} '
         'antsApplyTransforms -d 3 --interpolation NearestNeighbor -i {input.nii} -o {output.nii} -r {input.ref}  -t [{input.xfm},1]' 

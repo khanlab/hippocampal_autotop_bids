@@ -1,6 +1,7 @@
 rule import_t2:
     input: config['input_path']['T2w']
     output: bids(root='work/preproc_t2',**config['input_wildcards']['T2w'],suffix='T2w.nii.gz')
+    group: 'preproc'
     shell: 'cp {input} {output}'
 
 rule n4_t2:
@@ -65,6 +66,7 @@ rule avg_aligned_or_cp_t2:
         cmd = get_avg_or_cp_scans_cmd
     output:
         bids(root='work/preproc_t2',**config['subj_wildcards'],suffix='T2w.nii.gz',desc='preproc')
+    group: 'preproc'
     shell: '{params.cmd}'
         
 
@@ -92,6 +94,7 @@ rule compose_t2_xfm_corobl:
     output:
         t2_to_cor = bids(root='work/preproc_t2',**config['subj_wildcards'],suffix='xfm.txt',from_='T2w',to='{template}corobl',desc='affine',type_='itk')
     container: config['singularity']['prepdwi']
+    group: 'preproc'
     shell:
         'c3d_affine_tool -itk {input[0]} -itk {input[1]} -mult -oitk {output}'
 
@@ -104,6 +107,7 @@ rule warp_t2_to_corobl_crop:
     output: 
         nii = bids(root='work/preproc_t2',**config['subj_wildcards'],suffix='T2w.nii.gz',desc='cropped',space='{template}corobl',hemi='{hemi}'),
     container: config['singularity']['prepdwi']
+    group: 'preproc'
     shell:
         'ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS={threads} '
         'antsApplyTransforms -d 3 --interpolation Linear -i {input.nii} -o {output.nii} -r {input.ref}  -t {input.xfm}' 
@@ -116,6 +120,7 @@ rule lr_flip_t2:
     output:
         nii = bids(root='work/preproc_t2',**config['subj_wildcards'],suffix='T2w.nii.gz',desc='cropped',space='{template}corobl',hemi='{hemi,L}flip'),
     container: config['singularity']['prepdwi']
+    group: 'preproc'
     shell:
         'c3d {input} -flip x -o  {output}'
 

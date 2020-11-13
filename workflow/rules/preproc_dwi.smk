@@ -10,6 +10,7 @@ rule import_dwi:
         nii = [re.sub('.nii.gz',ext,config['input_path']['dwi']) for ext in ['.nii.gz','.bval','.bvec','.json']]
     output:
         nii = multiext(bids(root='work/preproc_dwi',suffix='dwi', datatype='dwi',**config['input_wildcards']['dwi']),'.nii.gz','.bval','.bvec','.json')
+    group: 'dwi'
     run:
         for in_file,out_file in zip(input,output):
             shell('cp -v {in_file} {out_file}')
@@ -21,6 +22,7 @@ rule dwidenoise:
                     '.nii.gz','.bvec','.bval','.json')
     container: config['singularity']['prepdwi']
     log: bids(root='logs',suffix='denoise.log',**config['input_wildcards']['dwi'])
+    group: 'dwi'
     shell: 'dwidenoise {input[0]} {output[0]} 2> {log} && ' 
             'cp {input[1]} {output[1]} && '
             'cp {input[2]} {output[2]} && '
@@ -45,6 +47,7 @@ rule mrdegibbs:
                     '.nii.gz','.bvec','.bval','.json')
     container: config['singularity']['prepdwi']
 #    log: bids(root='logs',suffix='degibbs.log',**config['input_wildcards']['dwi'])
+    group: 'dwi'
     shell: 'mrdegibbs {input[0]} {output[0]} && '#2> {log} && ' 
             'cp {input[1]} {output[1]} && '
             'cp {input[2]} {output[2]} && '
@@ -58,7 +61,7 @@ rule get_phase_encode_txt:
         json = bids(root='work/preproc_dwi',suffix='dwi.json',datatype='dwi',desc='degibbs',**config['input_wildcards']['dwi'])
     output:
         phenc_txt = bids(root='work/preproc_dwi',suffix='phenc.txt',datatype='dwi',desc='degibbs',**config['input_wildcards']['dwi']),
-    group: 'topup'
+    group: 'dwi'
     script: '../scripts/preproc_dwi/get_phase_encode_txt.py'
         
 
@@ -69,7 +72,7 @@ rule concat_phase_encode_txt:
                             zip,**snakebids.filter_list(config['input_zip_lists']['dwi'], wildcards))
     output:
         phenc_concat = bids(root='work/preproc_dwi',suffix='phenc.txt',datatype='dwi',desc='degibbs',**config['subj_wildcards'])
-    group: 'topup'
+    group: 'dwi'
     shell: 'cat {input} > {output}'
 
 rule concat_bzeros:
@@ -80,7 +83,7 @@ rule concat_bzeros:
         bzero_concat = bids(root='work/preproc_dwi',suffix='concatb0.nii.gz',datatype='dwi',desc='degibbs',**config['subj_wildcards'])
     container: config['singularity']['prepdwi']
     log: bids(root='logs',suffix='concat_bzeros.log',**config['subj_wildcards'])
-    group: 'topup'
+    group: 'dwi'
     shell: 'mrcat {input} {output} 2> {log}'
 
 
@@ -98,7 +101,7 @@ rule run_topup:
         topup_movpar = bids(root='work/preproc_dwi',suffix='topup_movpar.txt',datatype='dwi',**config['subj_wildcards']),
     container: config['singularity']['prepdwi']
     log: bids(root='logs',suffix='topup.log',**config['subj_wildcards'])
-    group: 'topup'
+    group: 'dwi'
     shell: 'topup --imain={input.bzero_concat} --datain={input.phenc_concat} --config={params.config}'
            ' --out={params.out_prefix} --iout={output.bzero_corrected} --fout={output.fieldmap} -v 2> {log}'
 
@@ -122,7 +125,7 @@ rule apply_topup_lsr:
         dwi_topup = bids(root='work/preproc_dwi',suffix='dwi.nii.gz',desc='topup',method='lsr',datatype='dwi',**config['subj_wildcards'])
     container: config['singularity']['prepdwi']
     shadow: 'minimal'
-    group: 'topup'
+    group: 'dwi'
     shell: 'applytopup --verbose --datain={input.phenc_concat} --imain={params.imain} --inindex={params.inindex} '
            ' -t {params.topup_prefix} -o {params.out_prefix} && '
            ' fslmaths {params.out_prefix}.nii.gz {output.dwi_topup}'
@@ -142,7 +145,7 @@ rule apply_topup_jac:
         nii = bids(root='work/preproc_dwi',suffix='dwi.nii.gz',desc='topup',method='jac',datatype='dwi',**config['input_wildcards']['dwi']), 
     container: config['singularity']['prepdwi']
     shadow: 'minimal'
-    group: 'topup'
+    group: 'dwi'
     shell: 
         'line=`cat {input.phenc_scan}` && inindex=`grep -n "$line" {input.phenc_concat} | cut -f1 -d:` && '
         ' applytopup --verbose --datain={input.phenc_concat} --imain={input.nii} --inindex=$inindex ' 
@@ -170,6 +173,7 @@ rule cp_sidecars_topup_jac:
                 '.bvec','.bval','.json')
     output: multiext(bids(root='work/preproc_dwi',suffix='dwi',desc='topup',method='jac',datatype='dwi',**config['subj_wildcards']),\
                 '.bvec','.bval','.json')
+    group: 'dwi'
     run:
         for in_file,out_file in zip(input,output):
             shell('cp -v {in_file} {out_file}')
@@ -181,7 +185,7 @@ rule concat_dwi_topup_jac:
     output:
         dwi_concat = bids(root='work/preproc_dwi',suffix='dwi.nii.gz',desc='topup',method='jac',datatype='dwi',**config['subj_wildcards'])
     container: config['singularity']['prepdwi']
-    group: 'topup'
+    group: 'dwi'
     shell: 'mrcat {input} {output}' 
 
 
@@ -191,7 +195,7 @@ rule get_eddy_index_txt:
                             zip,**snakebids.filter_list(config['input_zip_lists']['dwi'], wildcards))
     output:
         eddy_index_txt = bids(root='work/preproc_dwi',suffix='dwi.eddy_index.txt',desc='degibbs',datatype='dwi',**config['subj_wildcards']),
-    group: 'topup'
+    group: 'dwi'
     script: '../scripts/preproc_dwi/get_eddy_index_txt.py'
  
 rule concat_degibbs_dwi:
@@ -202,7 +206,7 @@ rule concat_degibbs_dwi:
         dwi_concat = bids(root='work/preproc_dwi',suffix='dwi.nii.gz',desc='degibbs',datatype='dwi',**config['subj_wildcards'])
     container: config['singularity']['prepdwi']
     log: bids(root='logs',suffix='concat_degibbs_dwi.log',**config['subj_wildcards'])
-    group: 'topup'
+    group: 'dwi'
     shell: 'mrcat {input} {output} 2> {log}' 
 
 rule concat_runs_bvec:
@@ -210,6 +214,7 @@ rule concat_runs_bvec:
         lambda wildcards: expand(bids(root='work/preproc_dwi',suffix='dwi.bvec',desc='{{desc}}',datatype='dwi',**config['input_wildcards']['dwi']),
                             zip,**snakebids.filter_list(config['input_zip_lists']['dwi'], wildcards))
     output: bids(root='work/preproc_dwi',suffix='dwi.bvec',desc='{desc}',datatype='dwi',**config['subj_wildcards'])
+    group: 'dwi'
     script: '../scripts/preproc_dwi/concat_bv.py' 
 
 rule concat_runs_bval:
@@ -217,6 +222,7 @@ rule concat_runs_bval:
         lambda wildcards: expand(bids(root='work/preproc_dwi',suffix='dwi.bval',desc='{{desc}}',datatype='dwi',**config['input_wildcards']['dwi']),
                             zip,**snakebids.filter_list(config['input_zip_lists']['dwi'], wildcards))
     output: bids(root='work/preproc_dwi',suffix='dwi.bval',desc='{desc}',datatype='dwi',**config['subj_wildcards'])
+    group: 'dwi'
     script: '../scripts/preproc_dwi/concat_bv.py' 
 
 #combines json files from multiple scans -- for now as a hack just copying first json over..
@@ -225,6 +231,7 @@ rule concat_runs_json:
         lambda wildcards: expand(bids(root='work/preproc_dwi',suffix='dwi.json',desc='{{desc}}',datatype='dwi',**config['input_wildcards']['dwi']),
                             zip,**snakebids.filter_list(config['input_zip_lists']['dwi'], wildcards))
     output: bids(root='work/preproc_dwi',suffix='dwi.json',desc='{desc}',datatype='dwi',**config['subj_wildcards'])
+    group: 'dwi'
     shell: 'cp {input[0]} {output}'
 #    script: '../scripts/preproc_dwi/concat_json.py' 
 
@@ -232,6 +239,7 @@ rule concat_runs_json:
 rule get_shells_from_bvals:
     input: '{dwi_prefix}.bval'
     output: '{dwi_prefix}.shells.json'
+    group: 'dwi'
     script:
         '../scripts/preproc_dwi/get_shells_from_bvals.py'
  
@@ -242,6 +250,7 @@ rule get_shell_avgs:
         shells = '{dwi_prefix}.shells.json'
     output: 
         avgshells = '{dwi_prefix}.avgshells.nii.gz'
+    group: 'dwi'
     script:
         '../scripts/preproc_dwi/get_shell_avgs.py'
 
@@ -254,6 +263,7 @@ rule get_shell_avg:
         bval = '{shell}'
     output:
         avgshell = '{dwi_prefix}_b{shell}.nii.gz'
+    group: 'dwi'
     script:
         '../scripts/preproc_dwi/get_shell_avg.py'
 
@@ -286,6 +296,7 @@ rule qc_brainmask_for_eddy:
 #                caption='../reports/segqc.rst',
 #                category='Segmentation QC',
 #                subcategory='{atlas} Atlas from {template}'),
+    group: 'dwi'
     script: '../scripts/preproc_dwi/vis_qc_dseg.py'
 
     
@@ -295,6 +306,7 @@ rule get_slspec_txt:
                             zip,**snakebids.filter_list(config['input_zip_lists']['dwi'], wildcards))
     output:
         eddy_slspec_txt = bids(root='work/preproc_dwi',suffix='dwi.eddy_slspec.txt',desc='degibbs',datatype='dwi',**config['subj_wildcards']),
+    group: 'dwi'
     script: '../scripts/preproc_dwi/get_slspec_txt.py'
          
  
@@ -326,7 +338,7 @@ rule run_eddy:
         time = 240, #6 hours (this is a conservative estimate, may be shorter)
         mem_mb = 32000,
     log: bids(root='logs',suffix='run_eddy.log',**config['subj_wildcards'])
-    group: 'eddy'
+    group: 'dwi'
     shell: 'singularity exec --nv -e {params.container} eddy_cuda9.1 --imain={input.dwi_concat} --mask={input.brainmask} '
             ' --acqp={input.phenc_concat} --index={input.eddy_index_txt} '
             ' --bvecs={input.bvecs} --bvals={input.bvals} --topup={params.topup_prefix} '
@@ -343,7 +355,7 @@ rule cp_eddy_outputs:
         bval = bids(root='work/preproc_dwi',suffix='dwi.bval',desc='degibbs',datatype='dwi',**config['subj_wildcards']),
     output:
         multiext(bids(root='work/preproc_dwi',suffix='dwi',desc='eddy',datatype='dwi',**config['subj_wildcards']),'.nii.gz','.bvec','.bval')
-    group: 'eddy'
+    group: 'dwi'
     run:
         for in_file,out_file in zip(input,output):
             shell('cp -v {in_file} {out_file}')
@@ -365,6 +377,7 @@ rule eddy_quad:
         eddy_qc_pdf = bids(root='work/preproc_dwi',suffix='eddy.qc/qc.pdf',datatype='dwi',**config['subj_wildcards'])
     
     container: config['singularity']['prepdwi']
+    group: 'dwi'
     shell: 
         'rmdir {output.out_dir} && '
         'eddy_quad {params.eddy_prefix} --eddyIdx={input.eddy_index_txt} --eddyParams={input.phenc_concat} '
@@ -377,6 +390,7 @@ rule split_eddy_qc_report:
         eddy_qc_pdf = bids(root='work/preproc_dwi',suffix='eddy.qc/qc.pdf',datatype='dwi',**config['subj_wildcards'])
     output:
         report(directory(bids(root='work/preproc_dwi',suffix='eddy.qc_pages',datatype='dwi',**config['subj_wildcards'])),patterns=['{pagenum}.png'],caption="../report/eddy_qc.rst", category="eddy_qc",subcategory=bids(**config['subj_wildcards'],include_subject_dir=False,include_session_dir=False))
+    group: 'dwi'
     shell:
         'mkdir -p {output} && convert {input} {output}/%02d.png'
         
@@ -399,6 +413,7 @@ rule rigid_reg_with_init:
         xfm = bids(root='work/preproc_dwi',**config['subj_wildcards'],from_='dwi',to='{template}corobl',desc='affine',type_='itk',suffix='0GenericAffine.mat',hemi='{hemi}'),
     container: config['singularity']['ants']
     threads: 8
+    group: 'reg_dwi'
     shell:
         'ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS={threads} '
         'antsRegistration -d 3 --interpolation Linear {params.multires} --metric CC[{input.ref},{input.flo},1,3] --transform Rigid[0.1] '
@@ -413,6 +428,7 @@ rule warp_mean_dwi_corobl:
     output: 
         nii = bids(root='work/preproc_dwi',suffix='{meandwi,b[0-9]+}.nii.gz',desc='cropped',datatype='dwi',**config['subj_wildcards'],space='{template}corobl',hemi='{hemi,L|R}'),
     container: config['singularity']['prepdwi']
+    group: 'reg_dwi'
     shell:
         'ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS={threads} '
         'antsApplyTransforms -d 3 --interpolation Linear -i {input.nii} -o {output.nii} -r {input.ref}  -t {input.xfm}' 
@@ -425,6 +441,7 @@ rule lr_flip_dwi:
     output:
         nii = bids(root='work/preproc_dwi',suffix='{meandwi,b[0-9]+}.nii.gz',desc='cropped',datatype='dwi',**config['subj_wildcards'],space='{template}corobl',hemi='{hemi,L}flip'),
     container: config['singularity']['prepdwi']
+    group: 'reg_dwi'
     shell:
         'c3d {input} -flip x -o  {output}'
 

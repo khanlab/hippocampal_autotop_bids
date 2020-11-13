@@ -53,6 +53,7 @@ rule compose_template_xfm_corobl:
     output:
         sub_to_cor = bids(root='work/preproc_t1',**config['subj_wildcards'],suffix='xfm.txt',from_='subject',to='{template}corobl',desc='affine',type_='itk'),
     container: config['singularity']['prepdwi']
+    group: 'preproc'
     shell:
         'c3d_affine_tool -itk {input.sub_to_std} -itk {input.std_to_cor} -mult -oitk {output}'
 
@@ -64,6 +65,7 @@ rule invert_t1w_intensity:
     output:
         t1 = bids(root='work/preproc_t1',**config['subj_wildcards'],desc='n4', suffix='InvT1w.nii.gz'),
     container: config['singularity']['prepdwi']
+    group: 'preproc'
     shell: 'c3d {input}  -scale -1 -stretch 0% 100% 0 1000 -o {output}'
 
 #apply transform to get subject in corobl cropped space
@@ -76,6 +78,7 @@ rule warp_t1_to_corobl_crop:
     output: 
         t1 = bids(root='work/preproc_t1',**config['subj_wildcards'],desc='cropped', suffix='InvT1w.nii.gz',space='{template}corobl',hemi='{hemi,L|R}'),
     container: config['singularity']['prepdwi']
+    group: 'preproc'
     shell:
         'ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS={threads} '
         'antsApplyTransforms -d 3 --interpolation Linear -i {input.t1} -o {output.t1} -r {input.ref}  -t {input.xfm}' 
@@ -87,6 +90,7 @@ rule lr_flip_t1:
     output:
         nii = bids(root='work/preproc_t1',**config['subj_wildcards'],suffix='InvT1w.nii.gz',desc='cropped',space='{template}corobl',hemi='{hemi,L}flip'),
     container: config['singularity']['prepdwi']
+    group: 'preproc'
     shell:
         'c3d {input} -flip x -o  {output}'
 
