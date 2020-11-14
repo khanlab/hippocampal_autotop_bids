@@ -64,6 +64,17 @@ pybids_inputs:
       - acquisition
       - run
 
+  seg:
+    filters:
+      suffix: 'dseg'
+      extension: '.nii.gz'
+      datatype: 'anat'
+      invalid_filters: 'allow'
+    wildcards:
+      - subject
+      - session
+#      - space
+
 
 
 #configuration for the command-line parameters to make available
@@ -103,13 +114,17 @@ parse_args:
     nargs: '+'
 
 
-  --suffix:
-    help: 'Suffix or suffixes to run hippocampal autotop on (default: %(default)s)'
+  --modality:
+    help: 'Type of image to run hippocampal autotop on, suffixed with seg will import an existing hippocampal tissue segmentation from that space, instead of running neural network (default: %(default)s)'
     nargs: '+'
-    default: 
+    choices:
       - T1w
       - T2w
       - b500
+      - segT1w
+      - segT2w
+    default: 
+      - T2w
  # custom command-line parameters can then be added, these will get added to the config
 
 
@@ -123,7 +138,7 @@ singularity:
 
 
 templates:
-  CITI168:  
+  CITI168:   #this is not currently used
     url: 'https://www.dropbox.com/s/6vkadw76okf8h2q/tpl-CITI168.tar?dl=1'
     files:
       - tpl-CITI168/tpl-CITI168_from-orig_to-corobl_type-itk_xfm.txt
@@ -142,16 +157,15 @@ template_files:
     xfm_corobl: hippocampal_autotop/atlases/CITI/CoronalOblique_rigid.txt
     crop_ref: hippocampal_autotop/atlases/CITI/img_300umCoronalOblique_hemi-{hemi}.nii.gz
 
-suffix:
+modality:
   - T2w
-#  - b500  
-  - InvT1w
+
 
 
 #CNN model - mapping from image type to model
 cnn_model:
   T2w: 'highres3dnet_large_v0.4'
-  InvT1w: 'highres3dnet_large_v0.4'
+  T1w: 'highres3dnet_large_v0.4'
   b500: 'highres3dnet_large_v0.6_b1000'
   b1000: 'highres3dnet_large_v0.6_b1000'
 
