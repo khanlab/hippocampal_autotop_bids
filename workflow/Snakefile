@@ -5,8 +5,11 @@ from snakebids import bids
 
 configfile: 'config/snakebids.yml'
 
+#get list of inputs to limit to (T1w + modalities)
+limit_to_list = config['modality'] if 'T1w' in config['modality'] else config['modality']+['T1w']
+
 #writes inputs_config.yml and updates config dict
-snakebids.generate_inputs_config(config)
+snakebids.generate_inputs_config(config,limit_to=limit_to_list)
 
 #this adds constraints to the bids naming
 wildcard_constraints:  **snakebids.get_wildcard_constraints(config)
@@ -27,6 +30,7 @@ def get_final_segs():
             mod_index = 'seg'
         else:
             mod_index = modality
+
         subfields = subfields + \
             expand(
                 bids(root='results',
@@ -41,7 +45,7 @@ def get_final_segs():
                 session=config['sessions']
             )
 
-        return subfields
+    return subfields
         
     
                 
@@ -53,9 +57,16 @@ rule all:
 
 
 include: 'rules/common.smk'
-include: 'rules/preproc_seg.smk'
 include: 'rules/preproc_t1.smk'
-include: 'rules/preproc_t2.smk'
-include: 'rules/preproc_dwi.smk'
+
+if 'segT1w' in config['modality'] or 'segT2w' in config['modality']:
+    include: 'rules/preproc_seg.smk'
+
+if 'segT2w' in config['modality'] or 'T2w' in config['modality']:
+    include: 'rules/preproc_t2.smk'
+
+if 'b500' in config['modality'] or 'b1000' in config['modality']:
+    include: 'rules/preproc_dwi.smk'
+
 include: 'rules/autotop.smk'
 

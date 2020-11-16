@@ -118,6 +118,7 @@ rule combine_lr_subfields:
     output:
         combined = bids(root='results',datatype='anat',suffix='dseg.nii.gz', desc='subfields',space='T1w',modality='{modality}', **config['subj_wildcards'],template='{template}')
     container: config['singularity']['prepdwi']
+    group: 'autotop'
     shell: 'c3d {input} -add -o {output}'
  
         

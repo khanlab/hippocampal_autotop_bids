@@ -1,0 +1,29 @@
+index	name	abbreviation
+1	right hippocampal grey matter	RGM
+2	right SRLM or 'dark band'	RSRLM
+3	right neocortex (entorhinal or parahippocampal)	RMTLC
+4	right pial surface	RPial
+5	right hippocampal-amygdalar transition area	RHATA
+6	right indusium griseum	RIndGris
+7	right cysts	RCyst
+8	right dentate gyrus	RDG
+11	left hippocampal grey matter	LGM
+12	left SRLM or 'dark band'	LSRLM
+13	left neocortex (entorhinal or parahippocampal)	LMTLC
+14	left pial surface	LPial
+15	left hippocampal-amygdalar transition area	LHATA
+16	left indusium griseum	LIndGris
+17	left cysts	LCyst
+18	left dentate gyrus	LDGm
+21	right subiculum	RSub
+22	right CA1	RCA1
+23	right CA2	RCA2
+24	right CA3	RCA3
+25	right CA4	RCA4
+26	right dentate gyrus	RDG
+31	left subiculum	LSub
+32	left CA1	LCA1
+33	left CA2	LCA2
+34	left CA3	LCA3
+35	left CA4	LCA4
+36	left dentate gyrus	LDG

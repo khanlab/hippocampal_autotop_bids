@@ -7,9 +7,6 @@ def main():
 
     pwd = os.path.abspath(os.path.dirname(__file__))
     app = SnakeBidsApp(pwd)
-#snakebids_config=os.path.join(pwd,'config','snakebids.yml'),
-#                        snakefile=os.path.join(pwd,'workflow','Snakefile'),
-#                        snakemake_dir=pwd)
     app.run_snakemake()
 
 
