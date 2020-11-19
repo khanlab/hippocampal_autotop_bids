@@ -6,10 +6,19 @@ from snakebids import bids
 configfile: 'config/snakebids.yml'
 
 #get list of inputs to limit to (T1w + modalities)
-limit_to_list = config['modality'] if 'T1w' in config['modality'] else config['modality']+['T1w']
+limit_to_list = set()
+limit_to_list.add('T1w') #always need T1w
+
+for modality in config['modality']:
+    if modality[:3] == 'seg': #if modality is segT2w, then add seg and T2w
+        limit_to_list.add('seg')
+        limit_to_list.add(modality[3:])
+    else:
+        limit_to_list.add(modality)
+
 
 #writes inputs_config.yml and updates config dict
-snakebids.generate_inputs_config(config,limit_to=limit_to_list)
+snakebids.generate_inputs_config(config,limit_to=list(limit_to_list))
 
 #this adds constraints to the bids naming
 wildcard_constraints:  **snakebids.get_wildcard_constraints(config)

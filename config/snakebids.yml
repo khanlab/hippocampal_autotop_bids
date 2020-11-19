@@ -127,6 +127,10 @@ parse_args:
       - T2w
  # custom command-line parameters can then be added, these will get added to the config
 
+  --derivatives:
+    help: 'Path to the derivatives folder (e.g. for finding manual segs) (default: %(default)s) '
+    default: False
+
 
 #--- workflow specific configuration -- 
 
