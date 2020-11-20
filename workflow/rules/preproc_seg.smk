@@ -16,7 +16,7 @@ rule warp_seg_to_corobl_crop:
     group: 'preproc'
     shell:
         'ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS={threads} '
-        'antsApplyTransforms -d 3 --interpolation Linear -i {input.nii} -o {output.nii} -r {input.ref}  -t {input.xfm}' 
+        'antsApplyTransforms -d 3 --interpolation NearestNeighbor -i {input.nii} -o {output.nii} -r {input.ref}  -t {input.xfm}' 
 
 
 rule lr_flip_seg:
