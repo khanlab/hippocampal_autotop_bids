@@ -64,19 +64,6 @@ pybids_inputs:
       - acquisition
       - run
 
-  1mmT1w:
-    filters:
-      suffix: 'T1w'
-      extension: '.nii.gz'
-      datatype: 'anat'
-      invalid_filters: 'allow'
-      space: null
-    wildcards:
-      - subject
-      - session
-      - acquisition
-      - run
-
   seg:
     filters:
       suffix: 'dseg'
