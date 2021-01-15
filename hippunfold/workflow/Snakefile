@@ -13,6 +13,9 @@ for modality in config['modality']:
     if modality[:3] == 'seg': #if modality is segT2w, then add seg and T2w
         limit_to_list.add('seg')
         limit_to_list.add(modality[3:])
+    elif modality == '1mmT1w': 
+        break #1mmT1w is just for specifying cnn model, so don't add to 
+                # list of bids inputs
     else:
         limit_to_list.add(modality)
 
@@ -37,6 +40,8 @@ wildcard_constraints:
 def get_modality_key(modality):
     if modality[:3] == 'seg': #if modality is segT1w, then seg is used as the pybids index
         mod_index = 'seg'
+    elif modality == '1mmT1w':
+        mod_index = 'T1w'
     else:
         mod_index = modality
     return mod_index
