@@ -32,7 +32,7 @@ Segmentations are derived from the U-net segmentation, which is by default perfo
          ├── sub-{subject}_hemi-{L,R}_space-cropT1w_desc-preproc_T2w.nii.gz
          └── sub-{subject}_hemi-{L,R}_space-{T1w,cropT1w}_desc-subfields_dseg.nii.gz
 
-Image in this folder are provided in the ``T1w`` space (same resolution and FOV as the ``T1w`` image, as well as in a 0.2mm upsampled FOV cropped around each hippocampus, but still aligned to the ``T1w`` image, which is denoted as the ``cropT1w`` space.
+Image in this folder are provided in the ``T1w`` space (same resolution and FOV as the ``T1w`` image, as well as in a 0.3mm upsampled FOV cropped around each hippocampus, but still aligned to the ``T1w`` image, which is denoted as the ``cropT1w`` space.
 
 Subfield segmentations
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -72,7 +72,7 @@ Surface meshes (geometry files) are in ``.surf.gii`` format, and are provided in
      └── surf_T2w
          └── sub-{subject}_hemi-{L,R}_space-{T1w,unfolded}_{inner,midthickness,outer}.surf.gii
  
-All surfaces, both ``T1w`` and ``unfolded``, share the same mesh topology and have corresponding vertices with each other. The vertex locations for unfolded surfaces are identical for all subjects as well (note that this of course is not the case for the ``T1w`` surfaces). 
+All surfaces, both ``space-T1w`` and ``space-unfolded``, share the same mesh topology and have corresponding vertices with each other. The vertex locations for unfolded surfaces are identical for all subjects as well (note that this of course is not the case for the ``space-T1w`` surfaces). 
 
 In addition to the geometry files, surface-based shape metrics are provided in ``.shape.gii`` format. The thickness, curvature and gyrification are computed using the same methods as cortical surfaces, based on the surface geometry files, and are provided in the ``T1w`` space::
 
