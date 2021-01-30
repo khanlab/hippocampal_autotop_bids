@@ -150,6 +150,12 @@ rule create_spec_file:
                     shape=['gyrification','curvature','thickness'], allow_missing=True),
         surfs = expand(bids(root='results',datatype='surf_{modality}',suffix='{surfname}.surf.gii', space='{space}', hemi='{hemi}', **config['subj_wildcards']),
                     surfname=['midthickness','inner','outer'], space=['T1w','unfolded'], allow_missing=True), 
+        dseg = expand(bids(root='results',datatype='seg_{modality}',suffix='{vol}.nii.gz', space='{space}',hemi='{hemi}',config['subj_wildcards']),
+                    vol=['desc-subfields_dseg'],space=['cropT1w','T1w'],allow_missing=True),
+        coords = expand(bids(root='results',datatype='seg_{modality}',suffix='{vol}.nii.gz',direction='{dir}', space='{space}',hemi='{hemi}',config['subj_wildcards']),
+                    vol=['coords'],direction=['AP','PD','IO'],space='cropT1w',allow_missing=True),
+        img = expand(bids(root='results',datatype='seg_{modality}',suffix='{vol}_{modality}.nii.gz', space='{space}',hemi='{hemi}',config['subj_wildcards']),
+                    vol=['desc-preproc'],space='cropT1w',allow_missing=True),
     params:
         cmds = get_cmd_spec_file
     output: 
