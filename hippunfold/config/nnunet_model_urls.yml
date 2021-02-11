@@ -1,2 +1,5 @@
-T2w: 'https://www.dropbox.com/s/1nbdfxb8tcrbnmc/trained_model.3d_fullres.Task100_hcp1200hippT2w.nnUNetTrainerV2.model_best.tar'
-T1w: 'https://www.dropbox.com/s/emv52j1v2mome33/trained_model.3d_fullres.Task101_hcp1200_T1w.nnUNetTrainerV2.model_best.tar'
+T1w: 'https://zenodo.org/record/4508747/files/trained_model.3d_fullres.Task101_hcp1200_T1w.nnUNetTrainerV2.model_best.tar'
+T2w: 'https://zenodo.org/record/4508747/files/trained_model.3d_fullres.Task102_hcp1200_T2w.nnUNetTrainerV2.model_best.tar'
+T1T2w: 'https://zenodo.org/record/4508747/files/trained_model.3d_fullres.Task103_hcp1200_T1T2w.nnUNetTrainerV2.model_best.tar'
+b1000: 'https://zenodo.org/record/4508747/files/trained_model.3d_fullres.Task104_hcp1200_b1000.nnUNetTrainerV2.model_best.tar'
+trimodal: 'https://zenodo.org/record/4508747/files/trained_model.3d_fullres.Task105_hcp1200_trimodal.nnUNetTrainerV2.model_best.tar'
