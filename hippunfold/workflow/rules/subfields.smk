@@ -1,3 +1,4 @@
+
 rule label_subfields_from_vol_coords_corobl:
     """ Label subfields using the volumetric coords and bigbrain labels"""
     input:  
@@ -25,7 +26,7 @@ rule combine_tissue_subfield_labels_corobl:
         then, we just need to add those in, using max(old,new) to override old with new in case of conflict
     """
     input:
-        tissue = bids(root='work',datatype='seg_{modality}',suffix='dseg.nii.gz',desc='nnunet',space='corobl',hemi='{hemi}',**config['subj_wildcards']),
+        tissue = bids(root='work',**config['subj_wildcards'],suffix='autotop/labelmap-postProcess.nii.gz',desc='cropped',space='corobl',hemi='{hemi}',modality='{modality}'),
         subfields = bids(root='work',datatype='seg_{modality}',desc='subfieldsnotissue',suffix='dseg.nii.gz', space='corobl',hemi='{hemi}', **config['subj_wildcards'])
     params:
         remap_dg = '-threshold 8 8 6 0 -popas dg',
