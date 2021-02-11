@@ -9,6 +9,7 @@ configfile: 'config/snakebids.yml'
 limit_to_list = set()
 limit_to_list.add('T1w') #always need T1w
 
+
 for modality in config['modality']:
     if modality[:3] == 'seg': #if modality is segT2w, then add seg and T2w
         limit_to_list.add('seg')
@@ -88,9 +89,14 @@ def get_final_anat():
     anat = []
     for modality in config['modality']:
         mod_index = get_modality_key(modality)
+        if mod_index == 'seg':
+            modality_suffix = modality[3:]
+        else:
+            modality_suffix = modality
         anat = anat + \
-            expand(bids(root='results',datatype='seg_{modality}',desc='preproc',suffix='{modality}.nii.gz', space='cropT1w',hemi='{hemi}', **config['subj_wildcards']),
+            expand(bids(root='results',datatype='seg_{modality}',desc='preproc',suffix='{modality_suffix}.nii.gz', space='cropT1w',hemi='{hemi}', **config['subj_wildcards']),
                 modality=modality,
+                modality_suffix=modality_suffix,
                 hemi=['L','R'],
                 subject=config['input_lists'][mod_index]['subject'],
                 session=config['sessions'])
@@ -110,7 +116,10 @@ include: 'rules/preproc_t1.smk'
 #include rules only as they are needed..
 if 'segT1w' in config['modality'] or 'segT2w' in config['modality']:
     include: 'rules/preproc_seg.smk'
+else: 
+    include: 'rules/nnunet.smk'
 
+#if using manual segs, then don't use nnunet
 if 'segT2w' in config['modality'] or 'T2w' in config['modality']:
     include: 'rules/preproc_t2.smk'
 
@@ -119,6 +128,5 @@ if 'b500' in config['modality'] or 'b1000' in config['modality']:
 
 include: 'rules/autotop.smk'
 include: 'rules/gifti.smk'
-include: 'rules/nnunet.smk'
 include: 'rules/subfields.smk'
 include: 'rules/resample_final_to_crop_t1.smk'

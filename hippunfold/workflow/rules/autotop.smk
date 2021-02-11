@@ -35,8 +35,6 @@ def get_autotop_input (wildcards):
 
     return nii
 
-
-
 rule run_autotop:
     input:
         nii = get_autotop_input,
@@ -88,9 +86,12 @@ rule run_autotop_inputseg:
     output:
         out_dir = directory(bids(root='work',**config['subj_wildcards'],suffix='autotop',desc='cropped',space='corobl',hemi='{hemi,Lflip|R}',modality='seg{modality}')),
         #subfields = bids(root='work',**config['subj_wildcards'],suffix='autotop/subfields-BigBrain.nii.gz',desc='cropped',space='corobl',hemi='{hemi,Lflip|R}',modality='seg{modality}'),
+        postproc = bids(root='work',**config['subj_wildcards'],suffix='autotop/labelmap-postProcess.nii.gz',desc='cropped',space='corobl',hemi='{hemi,Lflip|R}',modality='seg{modality}'),
+        warp_unfold2native_extrap = bids(root='work',**config['subj_wildcards'],suffix='autotop/Warp_unfold2native_extrapolateNearest.nii',desc='cropped',space='corobl',hemi='{hemi,Lflip|R}',modality='seg{modality}'),
         warp_unfold2native = bids(root='work',**config['subj_wildcards'],suffix='autotop/Warp_unfold2native.nii',desc='cropped',space='corobl',hemi='{hemi,Lflip|R}',modality='seg{modality}'),
         warp_native2unfold= bids(root='work',**config['subj_wildcards'],suffix='autotop/Warp_native2unfold.nii',desc='cropped',space='corobl',hemi='{hemi,Lflip|R}',modality='seg{modality}'),
-        gii = expand(bids(root='work',suffix='autotop/{surfname}.unfoldedtemplate.surf.gii',desc='cropped', space='corobl',hemi='{{hemi}}',modality='seg{{modality}}', **config['subj_wildcards']),surfname=['inner','outer','midthickness'],allow_missing=True)
+        gii = expand(bids(root='work',suffix='autotop/{surfname}.unfoldedtemplate.surf.gii',desc='cropped', space='corobl',hemi='{hemi,Lflip|R}',modality='seg{modality}', **config['subj_wildcards']),surfname=['inner','outer','midthickness'],allow_missing=True),
+        coords = expand(bids(root='work',suffix='autotop/coords-{dir}.nii.gz',desc='cropped', space='corobl',hemi='{hemi,Lflip|R}',modality='seg{modality}', **config['subj_wildcards']),dir=['AP','PD','IO'],allow_missing=True)
     threads: 8
     resources:
         time = 180 #3 hrs (so grouped job is set at 3hrs, since snakemake grouped resources not summed, but takes the max)
