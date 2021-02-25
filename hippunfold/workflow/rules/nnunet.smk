@@ -11,7 +11,16 @@ def get_nnunet_input (wildcards):
     return nii
 
 def get_model_tar (wildcards):
-    download_dir = AppDirs('hippunfold','khanlab').user_cache_dir
+
+    if 'HIPPUNFOLD_CACHE_DIR' in os.environ.keys():
+        print(f"HIPPUNFOLD_CACHE_DIR defined, using: {os.environ['HIPPUNFOLD_CACHE_DIR']}")
+        download_dir = os.environ['HIPPUNFOLD_CACHE_DIR']
+    else:
+        print(f'HIPPUNFOLD_CACHE_DIR not defined, using default location')
+        #create local download dir if it doesn't exist
+        dirs = AppDirs('hippunfold','khanlab')
+        download_dir = dirs.user_cache_dir
+
     local_tar = config['nnunet_model'][wildcards.modality]
     dl_path = os.path.abspath(os.path.join(download_dir,local_tar))
     if os.path.exists(dl_path):
