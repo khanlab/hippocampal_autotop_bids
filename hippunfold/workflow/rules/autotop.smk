@@ -24,7 +24,7 @@ def get_autotop_cmd (wildcards, input, output):
 def get_autotop_input (wildcards):
     if wildcards.modality == 'T2w':
         nii = bids(root='work',datatype='anat',**config['subj_wildcards'],suffix='T2w.nii.gz',desc='cropped',space='corobl',hemi='{hemi}'),
-    elif wildcards.modality == 'segT2w':
+    if wildcards.modality == 'segT2w':
         nii = bids(root='work',datatype='anat',**config['subj_wildcards'],suffix='T2w.nii.gz',desc='cropped',space='corobl',hemi='{hemi}'),
     elif wildcards.modality == 'T1w':
         nii = bids(root='work',datatype='anat',**config['subj_wildcards'],suffix='T1w.nii.gz',desc='cropped',space='corobl',hemi='{hemi}'),
