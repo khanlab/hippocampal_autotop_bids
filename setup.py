@@ -42,6 +42,7 @@ setuptools.setup(
         "nibabel",
         "numpy",
         "scipy",
+        "nilearn",
         "seaborn"
     ],
     python_requires='>=3.7'
