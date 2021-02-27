@@ -13,10 +13,8 @@ def get_nnunet_input (wildcards):
 def get_model_tar (wildcards):
 
     if 'HIPPUNFOLD_CACHE_DIR' in os.environ.keys():
-        print(f"HIPPUNFOLD_CACHE_DIR defined, using: {os.environ['HIPPUNFOLD_CACHE_DIR']}")
         download_dir = os.environ['HIPPUNFOLD_CACHE_DIR']
     else:
-        print(f'HIPPUNFOLD_CACHE_DIR not defined, using default location')
         #create local download dir if it doesn't exist
         dirs = AppDirs('hippunfold','khanlab')
         download_dir = dirs.user_cache_dir
