@@ -135,3 +135,18 @@ rule concat_subj_vols_tsv:
         import pandas as pd
         pd.concat([pd.read_table(in_tsv) for in_tsv in input ]).to_csv(output.tsv,sep='\t',index=False)
 
+
+rule resample_subfields_to_unfold:
+    """Resampling to unfold space"""
+    input:
+        nii = bids(root='work',datatype='seg_{modality}',desc='subfields',suffix='dseg.nii.gz', space='corobl',hemi='{hemi}', **config['subj_wildcards']),
+        xfm = bids(root='work',datatype='seg_{modality}',**config['subj_wildcards'],suffix='xfm.nii.gz',hemi='{hemi}',from_='corobl',to='unfold',mode='image')
+    output:
+        nii = bids(root='results',datatype='seg_{modality}',suffix='dseg.nii.gz', desc='subfields',space='unfold',hemi='{hemi}', **config['subj_wildcards'])
+    container: config['singularity']['autotop']
+    group: 'subj'
+    shell:
+        'ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS={threads} '
+        'antsApplyTransforms -d 3 --interpolation MultiLabel -i {input.nii} -o {output.nii} -r {input.xfm}  -t {input.xfm}' 
+
+

@@ -62,9 +62,10 @@ def get_final_subfields():
     for modality in config['modality']:
         mod_index = get_modality_key(modality)
         subfields = subfields + \
-            expand(bids(root='results',datatype='seg_{modality}',desc='subfields',suffix='dseg.nii.gz', space='cropT1w',hemi='{hemi}', **config['subj_wildcards']),
+            expand(bids(root='results',datatype='seg_{modality}',desc='subfields',suffix='dseg.nii.gz', space='{space}',hemi='{hemi}', **config['subj_wildcards']),
                 modality=modality,
                 hemi=['L','R'],
+                space=['cropT1w','unfold'],
                 subject=config['input_lists'][mod_index]['subject'],
                 session=config['sessions'])
 
@@ -97,20 +98,6 @@ def get_final_anat():
 
     return anat
 
-def get_final_xfm():
-    xfm = []
-    for modality in config['modality']:
-        mod_index = get_modality_key(modality)
-        xfm = xfm + \
-            expand(bids(root='results',datatype='seg_{modality}',suffix='xfm.nii.gz',hemi='{hemi}',from_='T1w',to='unfold',mode='image',**config['subj_wildcards']),
-                modality=modality,
-                hemi=['L','R'],
-                subject=config['input_lists'][mod_index]['subject'],
-                session=config['sessions'])
-
-    return xfm
-
-
 def get_final_qc():
     qc = []
     qc = qc + expand(bids(root='work',datatype='qc',**config['subj_wildcards'],suffix='regqc.png',
@@ -138,7 +125,6 @@ rule all:
         get_final_subfields(),
         get_final_coords(),
         get_final_anat(),
-        get_final_xfm(),
         get_final_qc(),
 
 rule all_group_tsv:
