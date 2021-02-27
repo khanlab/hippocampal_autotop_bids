@@ -167,6 +167,7 @@ singularity:
   prepdwi: 'docker://khanlab/prepdwi:latest'  
   autotop: 'docker://khanlab/autotop_deps:v0.2'
   fsl: '/project/6050199/akhanf/singularity/bids-apps/fsl_6.0.3_cuda9.1.sif'  #fsl with cuda container not on docker hub yet.. only used for dwi workflow anyhow..
+  ants: 'docker://kaczmarj/ants:2.3.4'
 
 
 template: CITI168
