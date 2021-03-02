@@ -43,7 +43,10 @@ setuptools.setup(
         "numpy",
         "scipy",
         "nilearn",
-        "seaborn"
+        "seaborn",
+        "jinja2",
+        "pygraphviz",
+        "pygments"
     ],
     python_requires='>=3.7'
 )
