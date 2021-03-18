@@ -133,9 +133,40 @@ rule calculate_thickness_from_surface:
     shell:
         "wb_command -surface-to-surface-3d-distance {input.outer} {input.inner} {output}"    
 
+
+rule create_dscalar_metric_cifti:
+    input:
+        left_metric = bids(root='results',datatype='surf_{modality}',suffix='{metric}.shape.gii', space='T1w',hemi='L', **config['subj_wildcards']),
+        right_metric = bids(root='results',datatype='surf_{modality}',suffix='{metric}.shape.gii', space='T1w',hemi='R', **config['subj_wildcards'])
+    output:
+        cifti = bids(root='results',datatype='surf_{modality}',suffix='{metric}.dscalar.nii', space='T1w', **config['subj_wildcards'])
+    container: config['singularity']['autotop']
+    group: 'subj' 
+    shell:
+        'wb_command  -cifti-create-dense-scalar {output}'
+        ' -left-metric {input.left_metric} -right-metric {input.right_metric}'
+
+rule create_dlabel_cifti_subfields:
+    input:
+        left_label = os.path.join(config['snakemake_dir'],'resources','bigbrain','sub-bigbrain_hemi-L_subfields.label.gii'),
+        right_label = os.path.join(config['snakemake_dir'],'resources','bigbrain','sub-bigbrain_hemi-R_subfields.label.gii')
+    output:
+        cifti = bids(root='results',datatype='surf_{modality}',suffix='subfields.dlabel.nii', space='T1w', **config['subj_wildcards'])
+    container: config['singularity']['autotop']
+    group: 'subj' 
+    shell:
+        'wb_command  -cifti-create-label {output}'
+        ' -left-label {input.left_label} -right-label {input.right_label}'
+
+
+
+
 def get_cmd_spec_file(wildcards, input, output):
     specfile = output.spec_file
-    structure = hemi_to_structure[wildcards.hemi]
+    if 'hemi' in wildcards:
+        structure = hemi_to_structure[wildcards.hemi]
+    else:
+        structure = 'INVALID'
     cmds = list()
     for infile in input:
         cmds.append(' '.join(['wb_command','-add-to-spec-file',specfile, structure, infile]))
@@ -163,9 +194,27 @@ rule merge_lr_spec_file:
         spec_files = expand(bids(root='results',datatype='surf_{modality}',suffix='hippunfold.spec', hemi='{hemi}',**config['subj_wildcards']),
                         hemi=['L','R'], allow_missing=True)
     output: 
-        spec_file = bids(root='results',datatype='surf_{modality}',suffix='hippunfold.spec', **config['subj_wildcards'])
+        spec_file = bids(root='work',datatype='surf_{modality}',desc='merged',suffix='hippunfold.spec', **config['subj_wildcards'])
     container: config['singularity']['autotop']
     group: 'subj' 
     shell: 'wb_command -spec-file-merge {input.spec_files} {output}'
+
+
+
+rule add_cifti_to_spec_file:
+    """ Adds the cifti dscalar and dlabel files to the LR-merged cifti """ 
+    input:
+        cifti = expand(bids(root='results',datatype='surf_{modality}',suffix='{cifti}.nii', space='T1w', **config['subj_wildcards']),
+                    cifti=['gyrification.dscalar','curvature.dscalar','thickness.dscalar','subfields.dlabel'], allow_missing=True),
+        spec_file = bids(root='work',datatype='surf_{modality}',desc='merged',suffix='hippunfold.spec', **config['subj_wildcards'])
+    params:
+        cmds = get_cmd_spec_file
+    output: 
+        spec_file = bids(root='results',datatype='surf_{modality}',suffix='hippunfold.spec', **config['subj_wildcards'])
+    container: config['singularity']['autotop']
+    group: 'subj' 
+    shell: 'cp {input.spec_file} {output.spec_file} && {params.cmds}'
+
+
 
 
