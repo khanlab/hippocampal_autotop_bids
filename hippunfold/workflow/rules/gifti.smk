@@ -196,6 +196,7 @@ rule create_spec_file:
                     shape=['gyrification','curvature','thickness'], allow_missing=True),
         surfs = expand(bids(root='results',datatype='surf_{modality}',suffix='{surfname}.surf.gii', space='{space}', hemi='{hemi}', **config['subj_wildcards']),
                     surfname=['midthickness','inner','outer'], space=['T1w','unfolded'], allow_missing=True), 
+        subfields = bids(root='results',datatype='surf_{modality}',suffix='subfields.label.gii', space='T1w',hemi='{hemi}', **config['subj_wildcards'])
     params:
         cmds = get_cmd_spec_file
     output: 
