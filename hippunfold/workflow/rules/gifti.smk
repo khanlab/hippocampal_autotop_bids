@@ -134,6 +134,14 @@ rule calculate_thickness_from_surface:
         "wb_command -surface-to-surface-3d-distance {input.outer} {input.inner} {output}"    
 
 
+rule get_bigbrain_subfield_label_gii:
+    input:
+        gii = os.path.join(config['snakemake_dir'],'resources','bigbrain','sub-bigbrain_hemi-{hemi}_subfields.label.gii')
+    output:
+        gii = bids(root='results',datatype='surf_{modality}',suffix='subfields.label.gii', space='T1w',hemi='{hemi}', **config['subj_wildcards'])
+    group: 'subj'
+    shell: 'cp {input} {output}'
+
 rule create_dscalar_metric_cifti:
     input:
         left_metric = bids(root='results',datatype='surf_{modality}',suffix='{metric}.shape.gii', space='T1w',hemi='L', **config['subj_wildcards']),
@@ -146,10 +154,11 @@ rule create_dscalar_metric_cifti:
         'wb_command  -cifti-create-dense-scalar {output}'
         ' -left-metric {input.left_metric} -right-metric {input.right_metric}'
 
+
 rule create_dlabel_cifti_subfields:
     input:
-        left_label = os.path.join(config['snakemake_dir'],'resources','bigbrain','sub-bigbrain_hemi-L_subfields.label.gii'),
-        right_label = os.path.join(config['snakemake_dir'],'resources','bigbrain','sub-bigbrain_hemi-R_subfields.label.gii')
+        left_label = bids(root='results',datatype='surf_{modality}',suffix='subfields.label.gii', space='T1w',hemi='L', **config['subj_wildcards']),
+        right_label = bids(root='results',datatype='surf_{modality}',suffix='subfields.label.gii', space='T1w',hemi='R', **config['subj_wildcards'])
     output:
         cifti = bids(root='results',datatype='surf_{modality}',suffix='subfields.dlabel.nii', space='T1w', **config['subj_wildcards'])
     container: config['singularity']['autotop']
