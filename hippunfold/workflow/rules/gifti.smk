@@ -196,7 +196,10 @@ rule create_spec_file:
                     shape=['gyrification','curvature','thickness'], allow_missing=True),
         surfs = expand(bids(root='results',datatype='surf_{modality}',suffix='{surfname}.surf.gii', space='{space}', hemi='{hemi}', **config['subj_wildcards']),
                     surfname=['midthickness','inner','outer'], space=['T1w','unfolded'], allow_missing=True), 
-        subfields = bids(root='results',datatype='surf_{modality}',suffix='subfields.label.gii', space='T1w',hemi='{hemi}', **config['subj_wildcards'])
+        subfields = bids(root='results',datatype='surf_{modality}',suffix='subfields.label.gii', space='T1w',hemi='{hemi}', **config['subj_wildcards']),
+        cifti = expand(bids(root='results',datatype='surf_{modality}',suffix='{cifti}.nii', space='T1w', **config['subj_wildcards']),
+                    cifti=['gyrification.dscalar','curvature.dscalar','thickness.dscalar','subfields.dlabel'], allow_missing=True),
+
     params:
         cmds = get_cmd_spec_file
     output: 
@@ -210,26 +213,11 @@ rule merge_lr_spec_file:
         spec_files = expand(bids(root='results',datatype='surf_{modality}',suffix='hippunfold.spec', hemi='{hemi}',**config['subj_wildcards']),
                         hemi=['L','R'], allow_missing=True)
     output: 
-        spec_file = bids(root='work',datatype='surf_{modality}',desc='merged',suffix='hippunfold.spec', **config['subj_wildcards'])
+        spec_file = bids(root='results',datatype='surf_{modality}',suffix='hippunfold.spec', **config['subj_wildcards'])
     container: config['singularity']['autotop']
     group: 'subj' 
     shell: 'wb_command -spec-file-merge {input.spec_files} {output}'
 
-
-
-rule add_cifti_to_spec_file:
-    """ Adds the cifti dscalar and dlabel files to the LR-merged cifti """ 
-    input:
-        cifti = expand(bids(root='results',datatype='surf_{modality}',suffix='{cifti}.nii', space='T1w', **config['subj_wildcards']),
-                    cifti=['gyrification.dscalar','curvature.dscalar','thickness.dscalar','subfields.dlabel'], allow_missing=True),
-        spec_file = bids(root='work',datatype='surf_{modality}',desc='merged',suffix='hippunfold.spec', **config['subj_wildcards'])
-    params:
-        cmds = get_cmd_spec_file
-    output: 
-        spec_file = bids(root='results',datatype='surf_{modality}',suffix='hippunfold.spec', **config['subj_wildcards'])
-    container: config['singularity']['autotop']
-    group: 'subj' 
-    shell: 'cp {input.spec_file} {output.spec_file} && {params.cmds}'
 
 
 
