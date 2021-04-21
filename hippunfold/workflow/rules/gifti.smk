@@ -56,12 +56,18 @@ rule warp_gii_unfold2native:
 rule unflip_gii:
     input:
         gii = bids(root='work',datatype='surf_{modality}',suffix='{surfname}.surf.gii', space='corobl',hemi='{hemi}flip', **config['subj_wildcards'])
+    params:
+        structure_type = lambda wildcards: hemi_to_structure[wildcards.hemi],
+        secondary_type = lambda wildcards: surf_to_secondary_type[wildcards.surfname],
+        surface_type = 'ANATOMICAL'
     output:
         gii = bids(root='work',datatype='surf_{modality}',suffix='{surfname}.surf.gii', space='corobl',hemi='{hemi,L}', **config['subj_wildcards'])
     container: config['singularity']['autotop']
     group: 'subj'
     shell:
-        'wb_command -surface-flip-lr {input.gii} {output.gii}'
+        'wb_command -surface-flip-lr {input.gii} {output.gii} && '
+        'wb_command -set-structure {output.gii} {params.structure_type} -surface-type {params.surface_type}'
+        ' -surface-secondary-type {params.secondary_type}'
 
 
 
