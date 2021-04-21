@@ -6,6 +6,8 @@ def get_nnunet_input (wildcards):
         nii = bids(root='work',datatype='anat',**config['subj_wildcards'],suffix='T2w.nii.gz',desc='cropped',space='corobl',hemi='{hemi}'),
     elif wildcards.modality == 'T1w':
         nii = bids(root='work',datatype='anat',**config['subj_wildcards'],suffix='T1w.nii.gz',desc='cropped',space='corobl',hemi='{hemi}'),
+    elif wildcards.modality == 'hippb500':
+        nii = bids(root='work',datatype='dwi',hemi='{hemi}',desc='cropped',space='corobl',suffix='b500.nii.gz',**config['subj_wildcards'] )
     else:
         raise ValueError('modality not supported for nnunet!')
     return nii

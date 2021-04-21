@@ -41,11 +41,11 @@ ITK transforms to warp images from the ``T1w`` space to the ``unfold`` space are
 
     sub-{subject}
      └── seg_T2w
-         └── sub-{subject}_hemi-{L,R}_from-corobl_to-unfold_mode-image_xfm.nii.gz
+         └── sub-{subject}_hemi-{L,R}_from-T1w_to-unfold_mode-image_xfm.nii.gz
 
 This is an ITK transform that can transform any image that is in ``T1w`` space (can be any resolution and FOV, as long as aligned to ``T1w``), to the ``unfold`` hippocampal volume space. You can use the warp itself as a reference image, e.g.::
 
-    antsApplyTransforms -i sub-001_space-T1w_FA.nii.gz -o sub-001_hemi-L_space-unfold_FA.nii.gz -t sub-001_hemi-L_from-corobl_to-unfold_mode-image_xfm.nii.gz -r sub-001_hemi-L_from-corobl_to-unfold_mode-image_xfm.nii.gz -v
+    antsApplyTransforms -i sub-001_space-T1w_FA.nii.gz -o sub-001_hemi-L_space-unfold_FA.nii.gz -t sub-001_hemi-L_from-T1w_to-unfold_mode-image_xfm.nii.gz -r sub-001_hemi-L_from-T1w_to-unfold_mode-image_xfm.nii.gz -v
 
 
 Subfield segmentations

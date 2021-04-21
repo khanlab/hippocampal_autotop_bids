@@ -7,3 +7,9 @@ def get_avg_or_cp_scans_cmd (wildcards, input, output):
     return cmd
 
 
+rule copy_to_results:
+    """ Generic rule for copying data from work to results"""
+    input: 'work/{file}'
+    output: 'results/{file}'
+    group: 'subj'
+    shell: 'cp {input} {output}'

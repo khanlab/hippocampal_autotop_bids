@@ -59,7 +59,7 @@ rule resample_subfields_native_crop:
 
 rule resample_coords_native_crop:
     input:
-        nii = bids(root='work',**config['subj_wildcards'],suffix='autotop/coords-{dir}.nii.gz',desc='cropped',space='corobl',hemi='{hemi}',modality='{modality}'),
+        nii = bids(root='work',datatype='seg_{modality}',dir='{dir}',suffix='coords.nii.gz', space='corobl',hemi='{hemi}', **config['subj_wildcards']),
         xfm = bids(root='work',datatype='anat',**config['subj_wildcards'],suffix='xfm.txt',from_='T1w',to='corobl',desc='affine',type_='itk'),
         ref = bids(root='work',datatype='seg_{modality}',suffix='cropref.nii.gz', space='T1w',hemi='{hemi}', **config['subj_wildcards'])
     output:
@@ -94,6 +94,4 @@ rule resample_t2_to_crop:
     shell:
         'ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS={threads} '
         'antsApplyTransforms -d 3 --interpolation Linear -i {input.nii} -o {output.nii} -r {input.ref} -t {input.xfm}' 
-
-
-
+        

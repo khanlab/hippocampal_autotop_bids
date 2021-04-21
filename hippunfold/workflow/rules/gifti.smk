@@ -78,12 +78,12 @@ def get_unfolded_surf_R_Lflip (wildcards):
         return  bids(root='work',datatype='surf_{modality}',suffix='{surfname}.surf.gii', space='unfolded',hemi='{hemi}flip', **config['subj_wildcards']).format(**wildcards)
 
 
-rule cp_unfolded_to_results:
-    """copy unfolded surf to results folder, from Lflip/R to L/R"""
+rule unflip_gii_unfolded:
+    """copy unfolded from Lflip to L"""
     input:
-        gii = get_unfolded_surf_R_Lflip
+        gii = bids(root='work',datatype='surf_{modality}',suffix='{surfname}.surf.gii', space='unfolded',hemi='{hemi}flip', **config['subj_wildcards'])
     output:
-        gii = bids(root='results',datatype='surf_{modality}',suffix='{surfname}.surf.gii', space='unfolded',hemi='{hemi,L|R}', **config['subj_wildcards'])
+        gii = bids(root='work',datatype='surf_{modality}',suffix='{surfname}.surf.gii', space='unfolded',hemi='{hemi,L}', **config['subj_wildcards'])
     container: config['singularity']['autotop']
     group: 'subj'
     shell:
