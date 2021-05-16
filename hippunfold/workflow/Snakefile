@@ -43,152 +43,6 @@ wildcard_constraints:
     modality='[a-zA-Z0-9]+',
 
 
-
-       
-def get_modality_key(modality):
-    if modality[:3] == 'seg': #if modality is segT1w, then seg is used as the pybids index
-        mod_index = 'seg'
-    else:
-        mod_index = modality
-    return mod_index
-
-                      
-
-#this function gets the list of final surf spec files - we use input_lists indexed by modality just in
-# case not all subjects possess the same modalities
-def get_final_specs():
-    specs = []
-    if 'cropT1w' in  config['output_spaces']:
-        for modality in config['modality']:
-            mod_index = get_modality_key(modality)
-            specs = specs + \
-                expand(bids(root='results',datatype='surf_{modality}',suffix='hippunfold.spec', **config['subj_wildcards']),
-                    modality=modality,
-                    subject=config['input_lists'][mod_index]['subject'],
-                    session=config['sessions'])
-
-    return specs
-
-def get_final_subfields():
-    subfields = []
-    for modality in config['modality']:
-        mod_index = get_modality_key(modality)
-        subfields = subfields + \
-            expand(bids(root='results',datatype='seg_{modality}',desc='subfields',suffix='dseg.nii.gz', space='{space}',hemi='{hemi}', **config['subj_wildcards']),
-                modality=modality,
-                hemi=['L','R'],
-                space=config['output_spaces'],
-                subject=config['input_lists'][mod_index]['subject'],
-                session=config['sessions'])
-
-    return subfields
-      
-def get_final_coords():
-    coords = []
-    for modality in config['modality']:
-        mod_index = get_modality_key(modality)
-        coords = coords + \
-            expand(bids(root='results',datatype='seg_{modality}',dir='{dir}',suffix='coords.nii.gz', space='{space}',hemi='{hemi}', **config['subj_wildcards']),
-                modality=modality,
-                dir=['AP','PD','IO'],
-                hemi=['L','R'],
-                space=config['output_spaces'],
-                subject=config['input_lists'][mod_index]['subject'],
-                session=config['sessions'])
-
-    return coords
- 
-def get_final_transforms():
-    transforms = []
-
-    if 'cropT1w' in  config['output_spaces']: 
-        output_ref = 'T1w'
-    else:
-        output_ref = 'corobl'
-
-    for modality in config['modality']:
-        mod_index = get_modality_key(modality)
-        transforms = transforms + \
-            expand(bids(root='results',datatype='seg_{modality}',**config['subj_wildcards'],suffix='xfm.nii.gz',hemi='{hemi}',from_='{space}',to='unfold',mode='image'),
-                modality=modality,
-                hemi=['L','R'],
-                space=output_ref,
-                subject=config['input_lists'][mod_index]['subject'],
-                session=config['sessions'])
-
-    return transforms
- 
-def get_final_anat():
-    anat = []
-    for modality in config['modality']:
-        if modality == 'hippb500':
-            continue
-        mod_index = get_modality_key(modality)
-        if mod_index == 'seg':
-            modality_suffix = modality[3:]
-        else:
-            modality_suffix = modality
-        anat = anat + \
-            expand(bids(root='results',datatype='seg_{modality}',desc='preproc',suffix='{modality_suffix}.nii.gz', space='{space}',hemi='{hemi}', **config['subj_wildcards']),
-                modality=modality,
-                modality_suffix=modality_suffix,
-                hemi=['L','R'],
-                space=config['output_spaces'],
-                subject=config['input_lists'][mod_index]['subject'],
-                session=config['sessions'])
-
-    return anat
-
-
-def get_final_qc():
-    qc = []
-    if 'T1w' in config['modality']:
-        qc = qc + expand(bids(root='work',datatype='qc',**config['subj_wildcards'],suffix='regqc.png',
-                from_='subject', to=config['template']),**config['input_lists']['T1w'])
-
-    for modality in config['modality']:
-        if modality == 'hippb500':
-            continue
-        mod_index = get_modality_key(modality)
-        qc = qc + \
-            expand(bids(root='work',datatype='qc',suffix='dseg.png', desc='subfields',from_='{modality}',slice_='{slice}',space='cropT1w',hemi='{hemi}', **config['subj_wildcards']),
-                modality=modality,
-                hemi=['L','R'],
-                slice=['1','2','3'],
-                subject=config['input_lists'][mod_index]['subject'],
-                session=config['sessions'])
-        qc = qc + \
-            expand(bids(root='work',datatype='qc',suffix='midthickness.surf.png', desc='subfields',from_='{modality}',space='cropT1w',hemi='{hemi}', **config['subj_wildcards']),
-                modality=modality,
-                hemi=['L','R'],
-                subject=config['input_lists'][mod_index]['subject'],
-                session=config['sessions'])
- 
-        qc = qc + \
-            expand(bids(root='work',datatype='qc',desc='subfields',from_='{modality}',suffix='volumes.png',**config['subj_wildcards']),
-                modality=modality,
-                subject=config['input_lists'][mod_index]['subject'],
-                session=config['sessions'])
-
-    return qc
-
-  
-rule all:
-    input: 
-        get_final_specs(),
-        get_final_subfields(),
-        get_final_transforms(),
-        get_final_coords(),
-        get_final_anat(),
-        get_final_qc(),
-
-rule all_group_tsv:
-    input: 
-        tsv = expand(bids(root='results',prefix='group',from_='{modality}',desc='subfields',suffix='volumes.tsv'),
-                    modality=config['modality'])
-
-
-
 include: 'rules/common.smk'
 include: 'rules/preproc_t1.smk'
 
@@ -212,3 +66,17 @@ include: 'rules/autotop.smk'
 include: 'rules/gifti.smk'
 include: 'rules/subfields.smk'
 include: 'rules/resample_final_to_crop_t1.smk'
+  
+rule all:
+    input: 
+        get_final_output()
+
+
+rule all_group_tsv:
+    input: 
+        tsv = expand(bids(root='results',prefix='group',from_='{modality}',desc='subfields',suffix='volumes.tsv'),
+                    modality=config['modality'])
+
+
+
+
