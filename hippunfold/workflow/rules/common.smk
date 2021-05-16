@@ -7,6 +7,8 @@ def get_avg_or_cp_scans_cmd (wildcards, input, output):
         cmd = f'cp {input} {output}'
     return cmd
 
+
+
 def get_modality_key(modality):
     if modality[:3] == 'seg': 
         return 'seg'
@@ -16,6 +18,8 @@ def get_modality_key(modality):
 def get_modality_suffix (modality):
     if modality[:3] == 'seg':
         return modality[3:]
+    elif modality[:4] == 'hipp':
+        return modality[4:]
     else:
         return modality
 
@@ -87,7 +91,8 @@ def get_final_anat():
 
 def get_final_qc():
     qc = []
-    if 'T1w' in config['modality']:
+    #right now can only do qc from cropT1w space 
+    if 'cropT1w' in config['output_spaces']:
         qc.extend(
             expand(
                 bids(
@@ -100,47 +105,47 @@ def get_final_qc():
                     allow_missing=True)
             )
 
-    qc.extend(
-        expand(
-            bids(
-                    root='work',
-                    datatype='qc',
-                    suffix='dseg.png',
-                    desc='subfields',
-                    from_='{modality}',
-                    slice_='{slice}',
-                    space='cropT1w',
-                    hemi='{hemi}',
-                    **config['subj_wildcards']),
-                hemi=['L','R'],
-                slice=['1','2','3'],
-                allow_missing=True)
-        )
-    qc.extend(
-        expand(
-            bids(
-                    root='work',
-                    datatype='qc',
-                    suffix='midthickness.surf.png', 
-                    desc='subfields',
-                    from_='{modality}',
-                    space='cropT1w',
-                    hemi='{hemi}',
-                    **config['subj_wildcards']),
-                hemi=['L','R'],
-                allow_missing=True)
-        ) 
-    qc.extend(
-        expand(
-            bids(
-                    root='work',
-                    datatype='qc',
-                    desc='subfields',
-                    from_='{modality}',
-                    suffix='volumes.png',
-                    **config['subj_wildcards']),
-                allow_missing=True)
-        )
+        qc.extend(
+            expand(
+                bids(
+                        root='work',
+                        datatype='qc',
+                        suffix='dseg.png',
+                        desc='subfields',
+                        from_='{modality}',
+                        slice_='{slice}',
+                        space='cropT1w',
+                        hemi='{hemi}',
+                        **config['subj_wildcards']),
+                    hemi=['L','R'],
+                    slice=['1','2','3'],
+                    allow_missing=True)
+            )
+        qc.extend(
+            expand(
+                bids(
+                        root='work',
+                        datatype='qc',
+                        suffix='midthickness.surf.png', 
+                        desc='subfields',
+                        from_='{modality}',
+                        space='cropT1w',
+                        hemi='{hemi}',
+                        **config['subj_wildcards']),
+                    hemi=['L','R'],
+                    allow_missing=True)
+            ) 
+        qc.extend(
+            expand(
+                bids(
+                        root='work',
+                        datatype='qc',
+                        desc='subfields',
+                        from_='{modality}',
+                        suffix='volumes.png',
+                        **config['subj_wildcards']),
+                    allow_missing=True)
+            )
     return qc
 
 
@@ -156,8 +161,6 @@ def get_final_output():
 
     final_output = []
     for modality in config['modality']:
-
-        #need to skip if modality == hippb500 ??
 
         modality_suffix = get_modality_suffix(modality)
         modality_key = get_modality_key(modality)

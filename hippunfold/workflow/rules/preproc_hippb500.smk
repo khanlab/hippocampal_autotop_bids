@@ -34,3 +34,10 @@ rule lr_flip_b500:
     shell:
         'c3d {input} -flip x -o  {output}'
 
+rule cp_b500_to_seg_dir:
+    input:
+        nii = bids(root='work',datatype='dwi',**config['subj_wildcards'],suffix='b500.nii.gz',desc='cropped',space='corobl',hemi='{hemi}')
+    output:
+        nii = bids(root='work',datatype='seg_hippb500',desc='preproc',suffix='b500.nii.gz', space='corobl',hemi='{hemi}', **config['subj_wildcards'])
+    group: 'subj'
+    shell: 'cp {input} {output}'
