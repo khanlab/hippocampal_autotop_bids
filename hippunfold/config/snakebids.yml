@@ -179,6 +179,13 @@ parse_args:
     nargs: '+'
     help: 'Sets the output space for results (default: %(default)s)'
 
+
+  --archive_work:
+    help: 'Archive work folder for each subject after completion, saving space/files (default: %(default)s)'
+    default: False
+    action: 'store_true'
+
+
 #--- workflow specific configuration -- 
 
 singularity:
