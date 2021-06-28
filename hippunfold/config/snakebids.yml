@@ -219,8 +219,10 @@ template: CITI168
 template_files:
   CITI168:
     T1w: resources/CITI168/T1w_head_700um.nii.gz
+    T1w_crop: resources/CITI168/T1w_300umCoronalOblique_hemi-R.nii.gz
     xfm_corobl: resources/CITI168/CoronalOblique_rigid.txt
     crop_ref: resources/CITI168/T2w_300umCoronalOblique_hemi-{hemi}.nii.gz
+    Mask_crop: resources/CITI168/Mask_300umCoronalOblique_hemi-R.nii.gz
 
 
 rigid_reg_template: False
@@ -298,6 +300,7 @@ shape_inject:
     - 4
     - 5
     - 6
+    - 8
   labels_reinsert:
     - 7
   label_smoothing_stdev: '0.5x0.5x0.5mm'

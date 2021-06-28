@@ -120,6 +120,40 @@ def get_bg_img_for_subfield_qc(wildcards):
 
     return  bids(root='results',datatype='seg_{modality}',desc='preproc',suffix=f'{bg_modality}.nii.gz', space='cropT1w',hemi='{hemi}', **config['subj_wildcards'])
 
+
+
+rule qc_nnunet_f3d:
+    input:
+        img = bids(root='work',datatype='anat',**config['subj_wildcards'],suffix='T1w.nii.gz',desc='cropped',space='corobl',hemi='{hemi}'),
+        seg = bids(root='work',datatype='seg_{modality}',**config['subj_wildcards'],suffix='dseg.nii.gz',desc='nnunet',space='corobl',hemi='{hemi,Lflip|R}')
+    params:
+        ref = os.path.join(config['snakemake_dir'],config['template_files'][config['template']]['T1w_crop']),
+        mask = os.path.join(config['snakemake_dir'],config['template_files'][config['template']]['Mask_crop'])
+    output:
+        cpp = bids(root='work',datatype='seg_{modality}',**config['subj_wildcards'],suffix='cpp.nii.gz',desc='f3d',space='corobl',hemi='{hemi,Lflip|R}'),
+        res = bids(root='work',datatype='seg_{modality}',**config['subj_wildcards'],suffix='T1w.nii.gz',desc='f3d',space='corobl',hemi='{hemi,Lflip|R}'),
+        res_mask = bids(root='work',datatype='seg_{modality}',**config['subj_wildcards'],suffix='mask.nii.gz',desc='f3d',space='corobl',hemi='{hemi,Lflip|R}')
+    container: config['singularity']['autotop']
+    shell:
+        'reg_f3d -flo {input.flo} -ref {params.ref} -res {output.res} -cpp {output.cpp} && '
+        'reg_resample -flo {input.seg} -cpp {outpt.cpp} -ref {params.ref} -res {output.res_mask} -inter 0'
+
+rule qc_nnunet_dice:
+    input:
+        res_mask = bids(root='work',datatype='seg_{modality}',**config['subj_wildcards'],suffix='mask.nii.gz',desc='f3d',space='corobl',hemi='{hemi,Lflip|R}'),
+        ref = os.path.join(config['snakemake_dir'],config['template_files'][config['template']]['Mask_crop'])
+    params:
+        hipp_lbls = '[1 2 7 8]'
+    output: 
+        dice = report(bids(root='results',datatype='qc',suffix='Dice-nnunetVSf3d.txt', from_='{modality}',hemi='{hemi}', **config['subj_wildcards']),
+                caption='../report/subfield_qc.rst',
+                category='Segmentation QC',
+                subcategory='Subfields from {modality}')
+    group: 'subj'
+    script: '../scripts/dice.py'
+
+
+
 rule qc_subfield:
     input:
         img = get_bg_img_for_subfield_qc,
