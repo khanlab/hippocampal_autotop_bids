@@ -186,17 +186,6 @@ parse_args:
     nargs: '+'
     help: 'Sets the output space for results (default: %(default)s)'
 
-  --output_density:
-    choices:
-      - '11k'
-      - '2k'
-      - '1k'
-      - '500'
-      - '300'
-    default:
-      - '11k'
-    nargs: '+'
-    help: 'Sets the output vertex density for results (default: %(default)s)'
 
   --keep_work:
     help: 'Keep work folder intact instead of archiving it for each subject (default: %(default)s)'
@@ -280,19 +269,6 @@ unfold_vol_ref:
     - '0'
   orient: RPI
 
-#space for uniform unfolded grid 
-unfold_mesh_ref:
-  dims:
-   - 254
-   - 126
-  start:
-   - 0.234375
-   - 0.234375
-  end:
-   - 39.765625
-   - 19.765625
-
-   
 shape_inject:
   labels_reg: 
     - 1
