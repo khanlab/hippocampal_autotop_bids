@@ -96,8 +96,6 @@ def get_f3d_ref (wildcards):
         nii = os.path.join(config['snakemake_dir'],config['template_files'][config['template']]['T2w_crop']),
     elif wildcards.modality == 'T1w':
         nii = os.path.join(config['snakemake_dir'],config['template_files'][config['template']]['T1w_crop']),
-    elif wildcards.modality == 'hippb500':
-        nii = os.path.join(config['snakemake_dir'],config['template_files'][config['template']]['T2w_crop']), # should eventually replace this with a DWI reference
     else:
         raise ValueError('modality not supported for nnunet!')
     return nii

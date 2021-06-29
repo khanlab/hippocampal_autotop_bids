@@ -146,19 +146,21 @@ def get_final_qc():
                         **config['subj_wildcards']),
                     allow_missing=True)
             )
-        qc.extend(
-            expand(
-                bids(
-                        root='results',
-                        datatype='qc',
-                        desc='unetf3d',
-                        suffix='dice.tsv',
-                        from_='{modality}',
-                        hemi='{hemi}',
-                        **config['subj_wildcards']),
-                    hemi=['L','R'],
-                    allow_missing=True)
-            )
+
+        if ('T1w' in config['modality']) or ('T2w' in config['modality']):
+            qc.extend(
+                expand(
+                    bids(
+                            root='results',
+                            datatype='qc',
+                            desc='unetf3d',
+                            suffix='dice.tsv',
+                            from_='{modality}',
+                            hemi='{hemi}',
+                            **config['subj_wildcards']),
+                        hemi=['L','R'],
+                        allow_missing=True)
+                )
     return qc
 
 
