@@ -102,36 +102,29 @@ def get_f3d_ref (wildcards):
         raise ValueError('modality not supported for nnunet!')
     return nii
 
-def get_f3d_seg (wildcards):
-    return bids(root='work',datatype='seg_{modality}',**config['subj_wildcards'],suffix='dseg.nii.gz',desc='nnunet',space='corobl',hemi='{hemi,Lflip|R}')
-
 rule qc_nnunet_f3d:
     input:
         img = get_nnunet_input,
-        seg = get_f3d_seg
-    params:
+        seg = bids(root='work',datatype='seg_{modality}',**config['subj_wildcards'],suffix='dseg.nii.gz',desc='nnunet',space='corobl',hemi='{hemi}'),
         ref = get_f3d_ref,
     output:
-        cpp = bids(root='work',datatype='seg_{modality}',**config['subj_wildcards'],suffix='cpp.nii.gz',desc='f3d',space='corobl',hemi='{hemi,Lflip|R}'),
-        res = bids(root='work',datatype='seg_{modality}',**config['subj_wildcards'],suffix='{modality}.nii.gz',desc='f3d',space='template',hemi='{hemi,Lflip|R}'),
-        res_mask = bids(root='work',datatype='seg_{modality}',**config['subj_wildcards'],suffix='mask.nii.gz',desc='f3d',space='template',hemi='{hemi,Lflip|R}')
+        cpp = bids(root='work',datatype='seg_{modality}',**config['subj_wildcards'],suffix='cpp.nii.gz',desc='f3d',space='corobl',hemi='{hemi}'),
+        res = bids(root='work',datatype='seg_{modality}',**config['subj_wildcards'],suffix='{modality}.nii.gz',desc='f3d',space='template',hemi='{hemi}'),
+        res_mask = bids(root='work',datatype='seg_{modality}',**config['subj_wildcards'],suffix='mask.nii.gz',desc='f3d',space='template',hemi='{hemi}')
     container: config['singularity']['autotop']
     group: 'subj'
     shell:
-        'reg_f3d -flo {input.img} -ref {params.ref} -res {output.res} -cpp {output.cpp} && '
-        'reg_resample -flo {input.seg} -cpp {output.cpp} -ref {params.ref} -res {output.res_mask} -inter 0'
-
-def get_f3d_resMask (wildcards):
-    return bids(root='work',datatype='seg_{modality}',**config['subj_wildcards'],suffix='mask.nii.gz',desc='f3d',space='template',hemi='{hemi,Lflip|R}')
+        'reg_f3d -flo {input.img} -ref {input.ref} -res {output.res} -cpp {output.cpp} && '
+        'reg_resample -flo {input.seg} -cpp {output.cpp} -ref {input.ref} -res {output.res_mask} -inter 0'
 
 rule qc_nnunet_dice:
     input:
-        res_mask = get_f3d_resMask,
+        res_mask = bids(root='work',datatype='seg_{modality}',**config['subj_wildcards'],suffix='mask.nii.gz',desc='f3d',space='template',hemi='{hemi}'),
         ref = os.path.join(config['snakemake_dir'],config['template_files'][config['template']]['Mask_crop'])
     params:
         hipp_lbls = '[1 2 7 8]'
     output: 
-        dice = report(bids(root='results',datatype='qc',suffix='Dice-nnunetVSf3d.txt', from_='{modality}',hemi='{hemi}', **config['subj_wildcards']),
+        dice = report(bids(root='results',datatype='qc',suffix='dice.tsv', desc='unetf3d',from_='{modality}',hemi='{hemi}', **config['subj_wildcards']),
                 caption='../report/nnunet_qc.rst',
                 category='Segmentation QC',
                 subcategory='nnunet from {modality}')

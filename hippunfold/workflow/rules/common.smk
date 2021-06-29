@@ -151,7 +151,8 @@ def get_final_qc():
                 bids(
                         root='results',
                         datatype='qc',
-                        suffix='Dice-nnunetVSf3d.txt',
+                        desc='unetf3d',
+                        suffix='dice.tsv',
                         from_='{modality}',
                         hemi='{hemi}',
                         **config['subj_wildcards']),
