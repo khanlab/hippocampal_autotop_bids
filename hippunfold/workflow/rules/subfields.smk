@@ -120,7 +120,6 @@ def get_bg_img_for_subfield_qc(wildcards):
 
     return  bids(root='results',datatype='seg_{modality}',desc='preproc',suffix=f'{bg_modality}.nii.gz', space='cropT1w',hemi='{hemi}', **config['subj_wildcards'])
 
-
 rule qc_subfield:
     input:
         img = get_bg_img_for_subfield_qc,
