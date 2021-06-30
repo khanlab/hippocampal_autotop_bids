@@ -87,7 +87,15 @@ pybids_inputs:
       - subject
       - session
 
-
+  ExVivo:
+    filters:
+      suffix: 'ExVivo'
+      extension: '.nii.gz'
+      datatype: 'anat'
+      invalid_filters: 'allow'
+    wildcards:
+      - subject
+      - session
 
 #configuration for the command-line parameters to make available
 # passed on the argparse add_argument()
@@ -136,6 +144,7 @@ parse_args:
       - dwi
       - segT1w
       - segT2w
+      - segExVivo
     default: 
       - T2w
  # custom command-line parameters can then be added, these will get added to the config

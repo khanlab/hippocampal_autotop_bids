@@ -16,8 +16,13 @@ max_iters = snakemake.params.max_iters
 lbl_nib = nib.load(snakemake.input.lbl)
 lbl = lbl_nib.get_fdata()
 
-init_coords_nib = nib.load(snakemake.input.init_coords)
-init_coords = init_coords_nib.get_fdata()
+try:
+    init_coords_nib = nib.load(snakemake.input.init_coords)
+    init_coords = init_coords_nib.get_fdata()
+    print('initializing laplace coords with ' + snakemake.input.init_coords)
+except:
+    init_coords = []
+    print('no initializing laplace coords found')
 
 idxgm = np.zeros(lbl.shape)
 for i in snakemake.params.gm_labels:
@@ -44,7 +49,11 @@ hl = hl/np.sum(hl)
 bg = 1-idxgm
 bg[source==1] = 0
 bg[sink==1] = 0
-coords = init_coords
+if bool(init_coords):
+    coords = init_coords
+else:
+    coords = np.zeros(lbl.shape)
+    coords[idxgm] = 0.5
 coords[bg==1] = np.nan
 coords[sink==1] = 1
 

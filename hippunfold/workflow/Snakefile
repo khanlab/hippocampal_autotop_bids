@@ -9,6 +9,10 @@ configfile: 'config/snakebids.yml'
 if 'hippb500' in config['modality']: #right now hippb500 cannot use T1w output space
     config['output_spaces'] = ['corobl']
 
+if segExVivo' in config['modality']:
+    config['output_spaces'] = ['corobl']
+    config['skip_inject_template_labels'] = [True]
+
 #get list of inputs to limit to (T1w + modalities)
 limit_to_list = set()
 if 'cropT1w' in config['output_spaces']:
@@ -49,6 +53,8 @@ include: 'rules/preproc_t1.smk'
 #include rules only as they are needed..
 if 'segT1w' in config['modality'] or 'segT2w' in config['modality']:
     include: 'rules/preproc_seg.smk'
+elif 'segExVivo' in config['modality']:
+    include: 'rules/preproc_ExVivo.smk'
 else: 
     include: 'rules/nnunet.smk'
 
