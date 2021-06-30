@@ -93,9 +93,9 @@ rule unflip_nnunet_nii:
 
 def get_f3d_ref (wildcards):
     if wildcards.modality == 'T2w':
-        nii = os.path.join(config['snakemake_dir'],config['template_files'][config['template']]['T2w_crop']),
+        nii = os.path.join(config['snakemake_dir'],config['template_files'][config['template']]['crop_ref']),
     elif wildcards.modality == 'T1w':
-        nii = os.path.join(config['snakemake_dir'],config['template_files'][config['template']]['T1w_crop']),
+        nii = os.path.join(config['snakemake_dir'],config['template_files'][config['template']]['crop_refT1w']),
     else:
         raise ValueError('modality not supported for nnunet!')
     return nii
@@ -120,7 +120,7 @@ rule qc_nnunet_dice:
         res_mask = bids(root='work',datatype='seg_{modality}',**config['subj_wildcards'],suffix='mask.nii.gz',desc='f3d',space='template',hemi='{hemi}'),
         ref = os.path.join(config['snakemake_dir'],config['template_files'][config['template']]['Mask_crop'])
     params:
-        hipp_lbls = '[1 2 7 8]'
+        hipp_lbls = [1,2,7,8]
     output: 
         dice = report(bids(root='results',datatype='qc',suffix='dice.tsv', desc='unetf3d',from_='{modality}',hemi='{hemi}', **config['subj_wildcards']),
                 caption='../report/nnunet_qc.rst',
