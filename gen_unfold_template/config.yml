@@ -1,0 +1,33 @@
+
+hippunfold_dir: /scratch/akhanf/3_processing/HCPUR100_hippunfold/hippunfold_v0.5.1/
+
+num_bins: '100'
+
+in_surfarea:
+  dims:
+   - 254
+   - 126
+  start:
+   - 0.234375
+   - 0.234375
+  end:
+   - 39.765625
+   - 19.765625
+
+surf_to_io:
+  midthickness: 1.171875
+  inner: 0.078125
+  outer: 2.265625
+
+targetareas:
+ - '2.3'
+ - '0.53'
+ - '0.15'
+
+#this is filled in by hand (since they are approximate)
+density_to_area:
+  '400': '2.3'
+  '2k': '0.53'
+  '7k': '0.15'
+
+

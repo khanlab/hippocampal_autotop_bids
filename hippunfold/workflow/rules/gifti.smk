@@ -9,7 +9,7 @@ rule warp_gii_unfoldtemplate2unfold:
     """warp from template space to subj unfolded"""
     input: 
         warp = bids(root='work',**config['subj_wildcards'],suffix='autotop/Warp_unfoldtemplate2unfold.nii',desc='cropped',space='corobl',hemi='{hemi}',modality='{modality}'),
-        gii = os.path.join(config['snakemake_dir'],'resources','unfold_template','{surfname}.unfoldedtemplate.surf.gii')
+        gii = os.path.join(config['snakemake_dir'],'resources','unfold_template','tpl-avg_space-unfold_den-{density}_{surfname}.surf.gii')
     params:
         structure_type = lambda wildcards: hemi_to_structure[wildcards.hemi],
         secondary_type = lambda wildcards: surf_to_secondary_type[wildcards.surfname],
@@ -138,6 +138,28 @@ rule calculate_thickness_from_surface:
     shell:
         "wb_command -surface-to-surface-3d-distance {input.outer} {input.inner} {output}"    
 
+rule resample_bigbrain_subfield_label_gii:
+    """ similar to wb_command -metric-resample, but for unfolded space
+         note, this creates a Nx1 nii file, for subsequent gifti conversion
+         using wb_command""" 
+    input:
+        label = os.path.join(config['snakemake_dir'],'resources','bigbrain','sub-bigbrain_hemi-{hemi}_subfields.label.gii'),
+        new_surf = os.path.join(config['snakemake_dir'],'resources','unfold_template','tpl-avg_space-unfold_den-{density}_midthickness.surf.gii')
+    output:
+        #label = bids(root='results',datatype='surf_{modality}',den='{density}',suffix='subfields.label.gii', space='T1w',hemi='{hemi}', **config['subj_wildcards'])
+        label_nii = bids(root='work',datatype='surf_{modality}',den='{density}',suffix='subfields.label.nii', space='T1w',hemi='{hemi}', **config['subj_wildcards'])
+    group: 'subj'
+    script: '../scripts/resample_unfolded_label.py'
+
+rule label_nii_to_metric_gii:
+    input:
+        label_nii = bids(root='work',datatype='surf_{modality}',den='{density}',suffix='subfields.label.nii', space='T1w',hemi='{hemi}', **config['subj_wildcards']),
+        surf = os.path.join(config['snakemake_dir'],'resources','unfold_template','tpl-avg_space-unfold_den-{density}_midthickness.surf.gii')
+    output:
+        metric_gii = bids(root='work',datatype='surf_{modality}',den='{density}',suffix='subfields.label.func.gii', space='T1w',hemi='{hemi}', **config['subj_wildcards'])
+    group: 'subj'
+    container: config['singularity']['autotop']
+    shell: 'wb_command -metric-convert -from-nifti {input.label_nii} {input.surf} {output.metric_gii}'
 
 rule get_bigbrain_subfield_label_gii:
     input:

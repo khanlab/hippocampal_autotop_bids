@@ -1,0 +1,234 @@
+from snakebids import bids
+import numpy as np
+from snakebids.snakemake_io import glob_wildcards
+
+configfile: 'config.yml'
+
+nbins = config['num_bins']
+targetareas = config['targetareas']
+
+subjects, = glob_wildcards(os.path.join(config['hippunfold_dir'],'results/sub-{subject}/surf_T2w/sub-{subject}_space-T1w_gyrification.dscalar.nii'))
+
+rule all_tplmesh:
+    input:
+        surf_gii = expand('results/tpl-avg_space-unfold_den-{density}_{surfname}.surf.gii',
+                        density=config['density_to_area'].keys(),
+                        surfname=config['surf_to_io'].keys())
+
+rule all_area:
+    input:
+        txt = expand(bids(root='results',subject='{subject}',hemi='{hemi}',space='corobl',
+                suffix='{surfname}.surfacearea.stats.alltargets.txt',nbins='{nbins}'),
+                    subject='0001',
+                    hemi='R',
+                    surfname=config['surf_to_io'].keys(),
+                    nbins=nbins)
+
+rule all_example:
+    input:
+        gii = expand(bids(root='example_transformed',
+                        include_subject_dir=False,
+                        subject='{subject}',
+                        hemi='{hemi}',
+                        space='corobl',
+                        suffix='{surfname}.surf.gii',den='{density}'),
+                    subject='0001',
+                    hemi='R',
+                    density=config['density_to_area'].keys(),
+                    surfname=config['surf_to_io'].keys())
+ 
+
+rule all_subjsurf:
+    input:
+        gii = expand(bids(root='results',subject='{subject}',hemi='{hemi}',space='corobl',
+                suffix='{surfname}.surfacearea.stats.txt',targetarea='{targetarea}',nbins='{nbins}'),
+                    subject='0001',
+                    hemi='R',
+                    surfname=config['surf_to_io'].keys(),
+                    targetarea=targetareas,
+                    nbins=nbins)
+
+
+def get_average_gyrification_cifti_cmd(wildcards, input,output):
+    cmd = ['wb_command','-cifti-average',f'{output.cifti}','-exclude-outliers 2 2']
+    for cifti in input.cifti:
+        cmd.append(f'-cifti {cifti}')
+    return ' '.join(cmd)
+
+rule average_gyrification_cifti:
+    input: 
+        cifti = expand(os.path.join(config['hippunfold_dir'],'results/sub-{subject}/surf_T2w/sub-{subject}_space-T1w_gyrification.dscalar.nii'),
+                    subject=subjects)
+    params:
+        cmd = get_average_gyrification_cifti_cmd
+    output:
+        cifti = 'results/avg-HCPUR100_gyrification.dscalar.nii'
+    shell:
+        '{params.cmd}'
+
+rule separate_avg_left_right:
+    input:
+        cifti = 'results/avg-HCPUR100_gyrification.dscalar.nii'
+    output:
+        gifti_left = 'results/avg-HCPUR100_hemi-L_gyrification.shape.gii',
+        gifti_right = 'results/avg-HCPUR100_hemi-R_gyrification.shape.gii'
+    shell:
+        'wb_command -cifti-separate {input} COLUMN -metric CORTEX_LEFT {output.gifti_left} -metric CORTEX_RIGHT {output.gifti_right}'
+
+rule avg_left_and_right:
+    """ NOT USING THIS, SINCE LEFT NEEDS TO BE FLIPPED in both dims"""
+    input:
+        left = 'results/avg-HCPUR100_hemi-L_gyrification.shape.gii',
+        right = 'results/avg-HCPUR100_hemi-R_gyrification.shape.gii'
+    output: 'results/avg-HCPUR100_hemi-avg_gyrification.shape.gii' 
+    shell:
+        'wb_command -metric-math "0.5*(left+right)" {output} -var left {input.left}  -var right {input.right}'
+
+
+
+rule gen_adaptive_mesh:
+    input:
+        surfarea_gii = 'results/avg-HCPUR100_hemi-R_gyrification.shape.gii',
+    params:
+        targetarea = lambda wildcards: float(wildcards.targetarea),
+        nbins = lambda wildcards: int(wildcards.nbins),
+    output:
+        points_csv = 'results/tpl-avg_targetarea-{targetarea}_nbins-{nbins}_points.csv',
+        triangles_csv = 'results/tpl-avg_targetarea-{targetarea}_nbins-{nbins}_triangles.csv',
+        grid_png = 'results/tpl-avg_targetarea-{targetarea}_nbins-{nbins}_grid.png'
+    script: 'gen_adaptivesurfs.py'
+       
+
+rule gen_uniform_mesh:
+    output:
+        triangles_csv = 'results/tpl-avg_targetarea-uniform_nbins-uniform_triangles.csv',
+        points_csv = 'results/tpl-avg_targetarea-uniform_nbins-uniform_points.csv',
+        grid_png = 'results/tpl-avg_desc-uniform_grid.png'
+    script: 'gen_uniformgrid.py'
+
+
+rule csv_to_gii:
+    """ ideally can replace this with writing directly from nibabel.."""
+    input:
+        points_csv = 'results/tpl-avg_targetarea-{targetarea}_nbins-{nbins}_points.csv',
+        triangles_csv = 'results/tpl-avg_targetarea-{targetarea}_nbins-{nbins}_triangles.csv',
+    params:
+        io_value = lambda wildcards: config['surf_to_io'][wildcards.surfname]
+    output:
+        surf_gii = 'results/tpl-avg_targetarea-{targetarea}_nbins-{nbins}_{surfname}.surf.gii',
+    shell:
+        "matlab -batch \"convert_csv_to_gifti('{input.triangles_csv}','{input.points_csv}','{output.surf_gii}',{params.io_value})\""
+
+#lookup tables for structure:
+hemi_to_structure = {'L': 'CORTEX_LEFT', 'Lflip': 'CORTEX_LEFT', 'R': 'CORTEX_RIGHT'}
+surf_to_secondary_type = {'midthickness': 'MIDTHICKNESS', 'inner': 'PIAL', 'outer': 'GRAY_WHITE'}
+
+
+rule surf_to_final_name:
+    input:
+        surf_gii = lambda wildcards: 'results/tpl-avg_targetarea-{targetarea}_nbins-{nbins}_{surfname}.surf.gii'.format(targetarea=config['density_to_area'][wildcards.density], nbins=config['num_bins'],surfname=wildcards.surfname)
+    output:
+        surf_gii = 'results/tpl-avg_space-unfold_den-{density}_{surfname}.surf.gii',
+    shell:
+        'cp {input} {output}'
+
+rule examplesurf_to_final_name:
+    input:
+        gii = lambda wildcards: bids(root='results',
+                    subject=f'{wildcards.subject}',
+                    hemi=f'{wildcards.hemi}',
+                    space='corobl',
+                    suffix=f'{wildcards.surfname}.surf.gii',
+                    targetarea=config['density_to_area'][wildcards.density],
+                    nbins=config['num_bins']),
+    output:
+        gii = bids(root='example_transformed',include_subject_dir=False,subject='{subject}',hemi='{hemi,R|Lflip}',space='corobl',
+                suffix='{surfname}.surf.gii',den='{density}'),
+    shell:
+        'cp {input} {output}'
+
+rule warp_gii_unfoldtemplate2unfold: 
+    """warp from template space to subj unfolded"""
+    input: 
+        warp ='../work/sub-{subject}/sub-{subject}_hemi-{hemi}_space-corobl_desc-cropped_modality-T2w_autotop/Warp_unfoldtemplate2unfold.nii',
+        gii = 'results/tpl-avg_targetarea-{targetarea}_nbins-{nbins}_{surfname}.surf.gii',
+
+    params:
+        structure_type = lambda wildcards: hemi_to_structure[wildcards.hemi],
+        secondary_type = lambda wildcards: surf_to_secondary_type[wildcards.surfname],
+        surface_type = 'FLAT'
+    output:
+        gii = bids(root='results',subject='{subject}',hemi='{hemi,R|Lflip}',space='unfolded',
+                suffix='{surfname}.surf.gii',targetarea='{targetarea}',nbins='{nbins}'),
+ 
+    shell:
+        'wb_command -surface-apply-warpfield {input.gii} {input.warp} {output.gii} && '
+        'wb_command -set-structure {output.gii} {params.structure_type} -surface-type {params.surface_type}'
+            ' -surface-secondary-type {params.secondary_type}'
+
+#subj unfolded surf might have a few vertices outside the bounding box.. this constrains all the vertices to the warp bounding box
+rule constrain_surf_to_bbox:
+    input:
+        gii = bids(root='results',subject='{subject}',hemi='{hemi,R|Lflip}',space='unfolded',
+                suffix='{surfname}.surf.gii',targetarea='{targetarea}',nbins='{nbins}'),
+        ref_nii = '../work/sub-{subject}/sub-{subject}_space-unfold_refvol.nii.gz'
+    output:
+        gii = bids(root='results',subject='{subject}',hemi='{hemi,R|Lflip}',space='unfolded',
+                suffix='{surfname}.surf.gii',desc='constrainbbox',targetarea='{targetarea}',nbins='{nbins}'),
+    group: 'subj'
+    script: 'constrain_surf_to_bbox.py'
+
+#warp from subj unfolded to corobl
+rule warp_gii_unfold2native: 
+    input: 
+        gii = bids(root='results',subject='{subject}',hemi='{hemi,R|Lflip}',space='unfolded',
+                suffix='{surfname}.surf.gii',desc='constrainbbox',targetarea='{targetarea}',nbins='{nbins}'),
+        warp ='../work/sub-{subject}/sub-{subject}_hemi-{hemi}_space-corobl_desc-cropped_modality-T2w_autotop/Warp_unfold2native.nii',
+    params:
+        structure_type = lambda wildcards: hemi_to_structure[wildcards.hemi],
+        secondary_type = lambda wildcards: surf_to_secondary_type[wildcards.surfname],
+        surface_type = 'ANATOMICAL'
+    output:
+        gii = bids(root='results',subject='{subject}',hemi='{hemi,R|Lflip}',space='corobl',
+                suffix='{surfname}.surf.gii',targetarea='{targetarea}',nbins='{nbins}'),
+    shell:
+        'wb_command -surface-apply-warpfield {input.gii} {input.warp} {output.gii} && '
+        'wb_command -set-structure {output.gii} {params.structure_type} -surface-type {params.surface_type}'
+            ' -surface-secondary-type {params.secondary_type}'
+
+
+
+rule calc_surfarea:
+    input:
+        gii = bids(root='results',subject='{subject}',hemi='{hemi,R|Lflip}',space='corobl',
+                suffix='{surfname}.surf.gii',targetarea='{targetarea}',nbins='{nbins}'),
+    output:
+        gii = bids(root='results',subject='{subject}',hemi='{hemi,R|Lflip}',space='corobl',
+                suffix='{surfname}.surfacearea.shape.gii',targetarea='{targetarea}',nbins='{nbins}'),
+    shell: 'wb_command -surface-vertex-areas {input} {output}'
+
+rule write_surfarea_stats:
+    input:
+        gii = bids(root='results',subject='{subject}',hemi='{hemi,R|Lflip}',space='corobl',
+                suffix='{surfname}.surfacearea.shape.gii',targetarea='{targetarea}',nbins='{nbins}'),
+    output:  
+        txt = bids(root='results',subject='{subject}',hemi='{hemi,R|Lflip}',space='corobl',
+                suffix='{surfname}.surfacearea.stats.txt',targetarea='{targetarea}',nbins='{nbins}'),
+    shell:
+        'wb_command -file-information {input} | tail -n 3 | head -n 1 > {output}'
+
+rule combine_surfarea_stats:
+    input:
+        txt = expand(bids(root='results',subject='{subject}',hemi='{hemi,R|Lflip}',space='corobl',
+                suffix='{surfname}.surfacearea.stats.txt',targetarea='{targetarea}',nbins='{nbins}'),
+                    targetarea=targetareas,allow_missing=True)
+    output:
+        txt = bids(root='results',subject='{subject}',hemi='{hemi,R|Lflip}',space='corobl',
+                suffix='{surfname}.surfacearea.stats.alltargets.txt',nbins='{nbins}'),
+    run:
+        shell('echo "Map   Minimum   Maximum    Mean   Sample Dev   % Positive   % Negative   Inf/NaN   Map Name" >> {output}')
+        for txt in input.txt:
+            shell('echo {txt} >> {output}')
+            shell('cat {txt} >> {output}')
+
+        

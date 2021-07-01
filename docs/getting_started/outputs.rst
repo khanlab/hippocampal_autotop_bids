@@ -84,22 +84,24 @@ Surface meshes (geometry files) are in ``.surf.gii`` format, and are provided in
 
     sub-{subject}
      └── surf_T2w
-         └── sub-{subject}_hemi-{L,R}_space-{T1w,unfolded}_{inner,midthickness,outer}.surf.gii
+         └── sub-{subject}_hemi-{L,R}_space-{T1w,unfolded}_den-{density}_{inner,midthickness,outer}.surf.gii
  
-All surfaces, both ``space-T1w`` and ``space-unfolded``, share the same mesh topology and have corresponding vertices with each other. The vertex locations for unfolded surfaces are identical for all subjects as well (note that this of course is not the case for the ``space-T1w`` surfaces). 
+Surfaces are provided in different density configurations, and are labelled based on the approximate number of vertices in each. The default densities are `7k` and `2k`, which have approximate vertex spacing of 0.5mm and 1mm respectively. There is also a `400` surface which has 2mm spacing (suitable for lower-resolution BOLD data). Previous versions of hippunfold exclusively used a `32k` template surface, formed by a 254x126 grid in the unfolded space, however a downside of this template is that it results in very non-uniform vertex spacing when transformed to the native space.  The newer `7k`, `2k` and `400` surfaces are designed to have closer to uniform vertex spacing when transformed. 
+
+All surfaces of the same density (e.g. `2k`), in both ``space-T1w`` and ``space-unfolded``, share the same mesh topology and have corresponding vertices with each other. The vertex locations for unfolded surfaces are identical for all subjects as well (note that this of course is not the case for the ``space-T1w`` surfaces). 
 
 In addition to the geometry files, surface-based shape metrics are provided in ``.shape.gii`` format. The thickness, curvature and gyrification are computed using the same methods as cortical surfaces, based on the surface geometry files, and are provided in the ``T1w`` space::
 
     sub-{subject}
      └── surf_T2w
-         └── sub-{subject}_hemi-{L,R}_space-T1w_{thickness,curvature,gyrification}.shape.gii
+         └── sub-{subject}_hemi-{L,R}_space-T1w_den-{density}_{thickness,curvature,gyrification}.shape.gii
 
 Finally, these files are packaged together for easy viewing in Connectome Workbench, ``wb_view``, in the following ``.spec`` files, for each hemisphere separately, and combined::
 
     sub-{subject}
      └── surf_T2w
-         ├── sub-{subject}_hemi-{L,R}_hippunfold.spec
-         └── sub-{subject}_hippunfold.spec
+         ├── sub-{subject}_hemi-{L,R}_den-{density}_hippunfold.spec
+         └── sub-{subject}_den-{density}_hippunfold.spec
 
 
 CIFTI outputs
