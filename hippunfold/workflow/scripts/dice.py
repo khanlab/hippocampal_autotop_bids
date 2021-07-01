@@ -13,8 +13,7 @@ for l in lbls:
 
 dice = np.sum(ref_mask[nnunet_bin==1])*2.0 / (np.sum(ref_mask) + np.sum(nnunet_bin))
 
-out = snakemake.output.dice
-f = open(out,'a')
-f.write(str(dice))
-f.close()
-
+#write to txt file
+with open(snakemake.output.dice,'w') as f:
+    f.write(str(dice))
+    
