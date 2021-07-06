@@ -5,7 +5,7 @@ from snakebids import bids
 
 configfile: 'config/snakebids.yml'
 
-#make adjustments to input params:
+#make adjustments to input params: NOTE this doesn't seem to work and should be updated!
 if 'hippb500' in config['modality']: #right now hippb500 cannot use T1w output space
     config['output_spaces'] = ['corobl']
 
@@ -13,9 +13,7 @@ if 'segExVivo' in config['modality']:
     config['output_spaces'] = ['corobl']
     config['skip_inject_template_labels'] = ['True']
     config['hemispheres'] = ['R']
-
-
-config.update()
+    config['skip_preproc'] = ['True']
 
 #get list of inputs to limit to (T1w + modalities)
 limit_to_list = set()
@@ -62,7 +60,6 @@ elif 'segExVivo' in config['modality']:
 else:
     include: 'rules/nnunet.smk'
 
-
 if 'segT2w' in config['modality'] or 'T2w' in config['modality']:
     include: 'rules/preproc_t2.smk'
 
@@ -72,8 +69,10 @@ if 'dwi' in config['modality']:
 if 'hippb500' in config['modality']:
     include: 'rules/preproc_hippb500.smk'
 
+if not config['skip_inject_template_labels']:
+    include: 'rules/shape_inject.smk'
+
 include: 'rules/autotop.smk'
-include: 'rules/shape_inject.smk'
 include: 'rules/gifti.smk'
 include: 'rules/subfields.smk'
 include: 'rules/resample_final_to_crop_t1.smk'

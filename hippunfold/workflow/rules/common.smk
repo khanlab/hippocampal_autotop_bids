@@ -155,7 +155,8 @@ def get_final_subj_output():
     subj_output.extend(get_final_subfields())
     subj_output.extend(get_final_coords())
     subj_output.extend(get_final_transforms())
-    subj_output.extend(get_final_anat())
+    if not 'segExVivo' in config['modality']: # has no anat
+        subj_output.extend(get_final_anat())
     subj_output.extend(get_final_qc())
     return subj_output
 
@@ -224,4 +225,10 @@ def get_input_for_shape_inject(wildcards):
         seg = bids(root='work',datatype='seg_{modality}',**config['subj_wildcards'],suffix='dseg.nii.gz',desc='nnunet',space='corobl',hemi='{hemi}').format(**wildcards)
     return seg
 
+def get_labels_for_laplace(wildcards):
+    if config['skip_inject_template_labels']:
+        seg = get_input_for_shape_inject(wildcards)
+    else:
+        seg = bids(root='work',datatype='seg_{modality}',**config['subj_wildcards'],suffix='dseg.nii.gz',desc='postproc',space='corobl',hemi='{hemi}').format(**wildcards)
+    return seg
 

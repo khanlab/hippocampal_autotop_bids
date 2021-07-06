@@ -133,7 +133,6 @@ parse_args:
           participants can be specified with a space separated list.
     nargs: '+'
 
-
   --modality:
     help: 'Type of image to run hippocampal autotop on, suffixed with seg will import an existing hippocampal tissue segmentation from that space, instead of running neural network (default: %(default)s)'
     nargs: '+'
@@ -148,14 +147,14 @@ parse_args:
     default: 
       - T2w
 
+ # custom command-line parameters can then be added, these will get added to the config
+
   --hemispheres:
     help: 'include left and/or right'
     nargs: '+'
     choices:
       - L
       - R
-
- # custom command-line parameters can then be added, these will get added to the config
 
   --derivatives:
     help: 'Path to the derivatives folder (e.g. for finding manual segs) (default: %(default)s) '
@@ -165,7 +164,6 @@ parse_args:
     help: 'Set this flag if your inputs (e.g. T2w, dwi) are already pre-processed (default: %(default)s)'
     default: False
     action: 'store_true'
-
  
   --skip_coreg:
     help: 'Set this flag if your inputs (e.g. T2w, dwi) are already registered to T1w space (default: %(default)s)'
@@ -176,8 +174,6 @@ parse_args:
     help: 'Set this flag to skip post-processing template injection into CNN segmentation (default: %(default)s)'
     default: False
     action: 'store_true'
-
-   
 
   --rigid_reg_template:
     help: 'Use rigid instead of affine for registration to template. Try this if your images are reduced FOV (default: %(default)s)'
@@ -202,7 +198,6 @@ parse_args:
       - 'cropT1w'
     nargs: '+'
     help: 'Sets the output space for results (default: %(default)s)'
-
 
   --keep_work:
     help: 'Keep work folder intact instead of archiving it for each subject (default: %(default)s)'

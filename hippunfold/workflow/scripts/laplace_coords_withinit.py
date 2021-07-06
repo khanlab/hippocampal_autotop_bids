@@ -10,19 +10,22 @@ logfile = open(snakemake.log[0], 'w')
 convergence_threshold = snakemake.params.convergence_threshold
 max_iters = snakemake.params.max_iters
 
-
+print(f'Starting laplace solver', file=logfile, flush=True)
 # initialize foreground (gm), source, and sink
 
-lbl_nib = nib.load(snakemake.input.lbl)
-lbl = lbl_nib.get_fdata()
+lblnib = nib.load(snakemake.input.lbl[0])
+lbl = lblnib.get_fdata()
+
+print(f'Loaded lbl', file=logfile, flush=True)
 
 try:
-    init_coords_nib = nib.load(snakemake.input.init_coords)
+    print(f'initializing laplace coords with {snakemake.params.init_coords}', file=logfile, flush=True)
+    init_coords_nib = nib.load(snakemake.params.init_coords)
     init_coords = init_coords_nib.get_fdata()
-    print('initializing laplace coords with ' + snakemake.input.init_coords)
 except:
+    print(f'no initializing laplace coords found', file=logfile, flush=True)
     init_coords = []
-    print('no initializing laplace coords found')
+
 
 idxgm = np.zeros(lbl.shape)
 for i in snakemake.params.gm_labels:
@@ -52,8 +55,7 @@ bg[sink==1] = 0
 if bool(init_coords):
     coords = init_coords
 else:
-    coords = np.zeros(lbl.shape)
-    coords[idxgm] = 0.5
+    coords = idxgm - 0.5
 coords[bg==1] = np.nan
 coords[sink==1] = 1
 
@@ -90,7 +92,7 @@ coords[idxgm==0] = np.nan #setting outside GM to nan -- this was zero before..
 
 
 #save file
-coords_nib = nib.Nifti1Image(coords,lbl_nib.affine,lbl_nib.header)
+coords_nib = nib.Nifti1Image(coords,lblnib.affine,lblnib.header)
 nib.save(coords_nib,snakemake.output.coords)
 
 logfile.close()

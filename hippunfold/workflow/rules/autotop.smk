@@ -1,19 +1,18 @@
 import os
 import numpy as np    
 
-def get_labels_for_laplace(wildcards):
-    if config['skip_inject_template_labels']:
-        seg = get_input_for_shape_inject(wildcards)
-    else:
-        seg = bids(root='work',datatype='seg_{modality}',**config['subj_wildcards'],suffix='dseg.nii.gz',desc='postproc',space='corobl',hemi='{hemi}').format(**wildcards)
 
-    return seg
+def get_init_coords(wildcards):
+    if not config['skip_inject_template_labels']:
+        init = bids(root='work',datatype='seg_{modality}',**config['subj_wildcards'],dir='{dir}',suffix='coords.nii.gz',desc='init',space='corobl',hemi='{hemi}'),
+    elif config['skip_inject_template_labels']:
+        init = 'Nonexistant'
 
 rule laplace_coords:
     input:
         lbl = get_labels_for_laplace,
-        init_coords = bids(root='work',datatype='seg_{modality}',**config['subj_wildcards'],dir='{dir}',suffix='coords.nii.gz',desc='init',space='corobl',hemi='{hemi}'),
     params:
+        init_coords = get_init_coords,
         gm_labels = lambda wildcards: config['laplace_labels'][wildcards.dir]['gm'],
         src_labels = lambda wildcards: config['laplace_labels'][wildcards.dir]['src'],
         sink_labels = lambda wildcards: config['laplace_labels'][wildcards.dir]['sink'],

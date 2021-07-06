@@ -13,7 +13,6 @@ rule label_subfields_from_vol_coords_corobl:
     script: '../scripts/label_subfields_from_vol_coords.py'
 
 
-
 rule combine_tissue_subfield_labels_corobl:
     """Combine subfield labels with the DG, SRLM and Cyst tissue labels
     
@@ -26,7 +25,7 @@ rule combine_tissue_subfield_labels_corobl:
         then, we just need to add those in, using max(old,new) to override old with new in case of conflict
     """
     input:
-        tissue = bids(root='work',datatype='seg_{modality}',**config['subj_wildcards'],suffix='dseg.nii.gz',desc='postproc',space='corobl',hemi='{hemi}'),
+        tissue = get_labels_for_laplace,
         subfields = bids(root='work',datatype='seg_{modality}',desc='subfieldsnotissue',suffix='dseg.nii.gz', space='corobl',hemi='{hemi}', **config['subj_wildcards'])
     params:
         remap_dg = '-threshold 8 8 6 0 -popas dg',
