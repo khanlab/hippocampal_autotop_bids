@@ -39,7 +39,7 @@ def get_final_subfields():
                 root='results',datatype='seg_{modality}',
                 desc='subfields',suffix='dseg.nii.gz',
                 space='{space}',hemi='{hemi}', **config['subj_wildcards']),
-            hemi=['L','R'],
+            hemi=config['hemispheres'],
             space=config['output_spaces'],
             allow_missing=True)
 
@@ -48,7 +48,7 @@ def get_final_coords():
         bids(
             root='results',datatype='seg_{modality}',dir='{dir}',suffix='coords.nii.gz', space='{space}',hemi='{hemi}', **config['subj_wildcards']),
                 dir=['AP','PD','IO'],
-                hemi=['L','R'],
+                hemi=config['hemispheres'],
                 space=config['output_spaces'],
                 allow_missing=True)
 
@@ -70,7 +70,7 @@ def get_final_transforms():
                 to='unfold',
                 mode='image'),
             space=output_ref,
-            hemi=['L','R'],
+            hemi=config['hemispheres'],
             allow_missing=True)
 
 
@@ -85,7 +85,7 @@ def get_final_anat():
                 hemi='{hemi}',
                 **config['subj_wildcards']),
             space=config['output_spaces'],
-            hemi=['L','R'],
+            hemi=config['hemispheres'],
             allow_missing=True)
 
 
@@ -117,7 +117,7 @@ def get_final_qc():
                         space='cropT1w',
                         hemi='{hemi}',
                         **config['subj_wildcards']),
-                    hemi=['L','R'],
+                    hemi=config['hemispheres'],
                     slice=['1','2','3'],
                     allow_missing=True)
             )
@@ -132,7 +132,7 @@ def get_final_qc():
 #                        space='cropT1w',
 #                        hemi='{hemi}',
 #                        **config['subj_wildcards']),
-#                    hemi=['L','R'],
+#                    hemi=config['hemispheres'],
 #                    allow_missing=True)
 #            ) 
         qc.extend(

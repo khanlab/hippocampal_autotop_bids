@@ -12,6 +12,10 @@ if 'hippb500' in config['modality']: #right now hippb500 cannot use T1w output s
 if 'segExVivo' in config['modality']:
     config['output_spaces'] = ['corobl']
     config['skip_inject_template_labels'] = ['True']
+    config['hemispheres'] = ['R']
+
+
+config.update()
 
 #get list of inputs to limit to (T1w + modalities)
 limit_to_list = set()

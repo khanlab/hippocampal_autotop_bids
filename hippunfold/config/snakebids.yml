@@ -147,6 +147,14 @@ parse_args:
       - segExVivo
     default: 
       - T2w
+
+  --hemispheres:
+    help: 'include left and/or right'
+    nargs: '+'
+    choices:
+      - L
+      - R
+
  # custom command-line parameters can then be added, these will get added to the config
 
   --derivatives:
@@ -227,7 +235,9 @@ rigid_reg_template: False
 modality:
   - T2w
 
-
+hemispheres:
+  - L
+  - R
 
 #these will be downloaded to ~/.cache/hippunfold
 nnunet_model:
