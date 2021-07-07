@@ -89,7 +89,7 @@ rule get_subfield_vols_subj:
     """Export segmentation volume for a subject to TSV"""
     input: 
         segs = expand(bids(root='results',**config['subj_wildcards'],datatype='seg_{modality}',hemi='{hemi}',space='cropT1w',desc='subfields',suffix='dseg.nii.gz'),
-                    hemi=['L','R'], allow_missing=True),
+                    hemi=config['hemispheres'], allow_missing=True),
         lookup_tsv = os.path.join(config['snakemake_dir'],'resources','desc-subfields_dseg.tsv')
     group: 'subj'
     output: 

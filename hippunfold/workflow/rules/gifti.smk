@@ -97,19 +97,20 @@ rule warp_gii_to_T1w:
         gii = bids(root='work',datatype='surf_{modality}',suffix='{surfname}.surf.gii', space='corobl',hemi='{hemi}', **config['subj_wildcards']),
         xfm = bids(root='work',datatype='anat',**config['subj_wildcards'],suffix='xfm.txt',from_='T1w',to='corobl',desc='affine',type_='ras'),
     output:
-        gii = bids(root='results',datatype='surf_{modality}',suffix='{surfname}.surf.gii', space='T1w',hemi='{hemi}', **config['subj_wildcards'])
+        gii = bids(root='work',datatype='surf_{modality}',suffix='{surfname}.surf.gii', space='T1w',hemi='{hemi}', **config['subj_wildcards'])
     container: config['singularity']['autotop']
     group: 'subj'
     shell:
         'wb_command -surface-apply-affine {input.gii} {input.xfm} {output.gii}'
 
 
-#morphological features, calculated in T1w space:
+#morphological features, calculated in output space:
 rule calculate_gyrification_from_surface:
     input: 
-        gii = bids(root='results',datatype='surf_{modality}',suffix='midthickness.surf.gii', space='T1w',hemi='{hemi}', **config['subj_wildcards'])
+        gii = lambda wildcards: expand(bids(root='work',datatype='surf_{modality}',suffix='midthickness.surf.gii', space='{space}',hemi='{hemi}', 
+                    **config['subj_wildcards']),space=config['output_spaces'], allow_missing=True)
     output:
-        gii = bids(root='results',datatype='surf_{modality}',suffix='gyrification.shape.gii', space='T1w',hemi='{hemi}', **config['subj_wildcards'])
+        gii = bids(root='work',datatype='surf_{modality}',suffix='gyrification.shape.gii', space='{space}',hemi='{hemi}', **config['subj_wildcards'])
     container: config['singularity']['autotop']
     group: 'subj' 
     shell:
@@ -118,9 +119,10 @@ rule calculate_gyrification_from_surface:
 
 rule calculate_curvature_from_surface:
     input: 
-        gii = bids(root='results',datatype='surf_{modality}',suffix='midthickness.surf.gii', space='T1w',hemi='{hemi}', **config['subj_wildcards'])
+        gii = lambda wildcards: expand(bids(root='work',datatype='surf_{modality}',suffix='midthickness.surf.gii', space='{space}',hemi='{hemi}', 
+                    **config['subj_wildcards']),space=config['output_spaces'], allow_missing=True)
     output:
-        gii = bids(root='results',datatype='surf_{modality}',suffix='curvature.shape.gii', space='T1w',hemi='{hemi}', **config['subj_wildcards'])
+        gii = bids(root='work',datatype='surf_{modality}',suffix='curvature.shape.gii', space='{space}',hemi='{hemi}', **config['subj_wildcards'])
     container: config['singularity']['autotop']
     group: 'subj' 
     shell:
@@ -129,10 +131,12 @@ rule calculate_curvature_from_surface:
         
 rule calculate_thickness_from_surface:
     input: 
-        inner = bids(root='results',datatype='surf_{modality}',suffix='inner.surf.gii', space='T1w',hemi='{hemi}', **config['subj_wildcards']),
-        outer = bids(root='results',datatype='surf_{modality}',suffix='outer.surf.gii', space='T1w',hemi='{hemi}', **config['subj_wildcards'])
+        inner = lambda wildcards: expand(bids(root='work',datatype='surf_{modality}',suffix='inner.surf.gii', space='{space}',hemi='{hemi}', 
+                    **config['subj_wildcards']),space=config['output_spaces'], allow_missing=True),
+        outer = lambda wildcards: expand(bids(root='work',datatype='surf_{modality}',suffix='outer.surf.gii', space='{space}',hemi='{hemi}', 
+                    **config['subj_wildcards']),space=config['output_spaces'], allow_missing=True)
     output:
-        gii = bids(root='results',datatype='surf_{modality}',suffix='thickness.shape.gii', space='T1w',hemi='{hemi}', **config['subj_wildcards'])
+        gii = bids(root='work',datatype='surf_{modality}',suffix='thickness.shape.gii', space='{space}',hemi='{hemi}', **config['subj_wildcards'])
     container: config['singularity']['autotop']
     group: 'subj' 
     shell:
@@ -143,16 +147,18 @@ rule get_bigbrain_subfield_label_gii:
     input:
         gii = os.path.join(config['snakemake_dir'],'resources','bigbrain','sub-bigbrain_hemi-{hemi}_subfields.label.gii')
     output:
-        gii = bids(root='results',datatype='surf_{modality}',suffix='subfields.label.gii', space='T1w',hemi='{hemi}', **config['subj_wildcards'])
+        gii = bids(root='work',datatype='surf_{modality}',suffix='subfields.label.gii', space='{space}',hemi='{hemi}', **config['subj_wildcards'])
     group: 'subj'
     shell: 'cp {input} {output}'
 
 rule create_dscalar_metric_cifti:
     input:
-        left_metric = bids(root='results',datatype='surf_{modality}',suffix='{metric}.shape.gii', space='T1w',hemi='L', **config['subj_wildcards']),
-        right_metric = bids(root='results',datatype='surf_{modality}',suffix='{metric}.shape.gii', space='T1w',hemi='R', **config['subj_wildcards'])
+        left_metric = lambda wildcards: expand(bids(root='work',datatype='surf_{modality}',suffix='{metric}.shape.gii', space='{space}',hemi='L', 
+                    **config['subj_wildcards']),space=config['output_spaces'], allow_missing=True),
+        right_metric = lambda wildcards: expand(bids(root='work',datatype='surf_{modality}',suffix='{metric}.shape.gii', space='{space}',hemi='R', 
+                    **config['subj_wildcards']),space=config['output_spaces'], allow_missing=True)
     output:
-        cifti = bids(root='results',datatype='surf_{modality}',suffix='{metric}.dscalar.nii', space='T1w', **config['subj_wildcards'])
+        cifti = bids(root='work',datatype='surf_{modality}',suffix='{metric}.dscalar.nii', space='{space}', **config['subj_wildcards'])
     container: config['singularity']['autotop']
     group: 'subj' 
     shell:
@@ -162,10 +168,12 @@ rule create_dscalar_metric_cifti:
 
 rule create_dlabel_cifti_subfields:
     input:
-        left_label = bids(root='results',datatype='surf_{modality}',suffix='subfields.label.gii', space='T1w',hemi='L', **config['subj_wildcards']),
-        right_label = bids(root='results',datatype='surf_{modality}',suffix='subfields.label.gii', space='T1w',hemi='R', **config['subj_wildcards'])
+        left_label = lambda wildcards: expand(bids(root='work',datatype='surf_{modality}',suffix='subfields.label.gii', space='{space}',hemi='L', 
+                    **config['subj_wildcards']),space=config['output_spaces'], allow_missing=True),
+        right_label = lambda wildcards: expand(bids(root='work',datatype='surf_{modality}',suffix='subfields.label.gii', space='{space}',hemi='R', 
+                    **config['subj_wildcards']),space=config['output_spaces'], allow_missing=True)
     output:
-        cifti = bids(root='results',datatype='surf_{modality}',suffix='subfields.dlabel.nii', space='T1w', **config['subj_wildcards'])
+        cifti = bids(root='work',datatype='surf_{modality}',suffix='subfields.dlabel.nii', space='{space}', **config['subj_wildcards'])
     container: config['singularity']['autotop']
     group: 'subj' 
     shell:
@@ -191,31 +199,40 @@ def get_cmd_spec_file(wildcards, input, output):
 #add surfs and metrics to a spec file
 rule create_spec_file:
     input:
-        shapes = expand(bids(root='results',datatype='surf_{modality}',suffix='{shape}.shape.gii', space='T1w',hemi='{hemi}', **config['subj_wildcards']),
-                    shape=['gyrification','curvature','thickness'], allow_missing=True),
-        surfs = expand(bids(root='results',datatype='surf_{modality}',suffix='{surfname}.surf.gii', space='{space}', hemi='{hemi}', **config['subj_wildcards']),
-                    surfname=['midthickness','inner','outer'], space=['T1w','unfolded'], allow_missing=True), 
-        subfields = bids(root='results',datatype='surf_{modality}',suffix='subfields.label.gii', space='T1w',hemi='{hemi}', **config['subj_wildcards']),
-        cifti = expand(bids(root='results',datatype='surf_{modality}',suffix='{cifti}.nii', space='T1w', **config['subj_wildcards']),
-                    cifti=['gyrification.dscalar','curvature.dscalar','thickness.dscalar','subfields.dlabel'], allow_missing=True),
-
+        shapes = lambda wildcards: expand(bids(root='work',datatype='surf_{modality}',suffix='{shape}.shape.gii', space='{space}',hemi='{hemi}', **config['subj_wildcards']),
+                    shape=['gyrification','curvature','thickness'], space=config['output_spaces'], allow_missing=True),
+        surfs = lambda wildcards: expand(bids(root='work',datatype='surf_{modality}',suffix='{surfname}.surf.gii', space='{space}', hemi='{hemi}', **config['subj_wildcards']),
+                    surfname=['midthickness','inner','outer'], space=config['output_spaces'], allow_missing=True), #TODO: add back in space-unfolded
+        subfields = lambda wildcards: expand(bids(root='work',datatype='surf_{modality}',suffix='subfields.label.gii', space='{space}',hemi='{hemi}', **config['subj_wildcards']),
+                    space=config['output_spaces'], allow_missing=True),
+        cifti = lambda wildcards: expand(bids(root='work',datatype='surf_{modality}',suffix='{cifti}.nii', space='{space}', **config['subj_wildcards']),
+                    cifti=['gyrification.dscalar','curvature.dscalar','thickness.dscalar','subfields.dlabel'],space=config['output_spaces'], allow_missing=True),
     params:
         cmds = get_cmd_spec_file
     output: 
-        spec_file = bids(root='results',datatype='surf_{modality}',suffix='hippunfold.spec', hemi='{hemi,L|R}',**config['subj_wildcards'])
+        spec_file = bids(root='work',datatype='surf_{modality}',space='{space}',suffix='hippunfold.spec', hemi='{hemi,L|R}',**config['subj_wildcards'])
     container: config['singularity']['autotop']
     group: 'subj' 
     shell: '{params.cmds}'
 
+def get_lr_spec_merge_cmd(wildcards, input, output):
+    if len(config['hemispheres'])==1:
+        cmd = 'cp '
+    else:
+        cmd = 'wb_command -spec-file-merge '
+    return cmd
+
 rule merge_lr_spec_file:
     input:
-        spec_files = expand(bids(root='results',datatype='surf_{modality}',suffix='hippunfold.spec', hemi='{hemi}',**config['subj_wildcards']),
-                        hemi=['L','R'], allow_missing=True)
+        spec_files = expand(bids(root='work',datatype='surf_{modality}',space='{space}',suffix='hippunfold.spec', hemi='{hemi}',**config['subj_wildcards']),
+                        hemi=config['hemispheres'],space=config['output_spaces'], allow_missing=True)
     output: 
-        spec_file = bids(root='results',datatype='surf_{modality}',suffix='hippunfold.spec', **config['subj_wildcards'])
+        spec_file = bids(root='work',datatype='surf_{modality}',space='{space}',suffix='hippunfold.spec', **config['subj_wildcards'])
+    params:
+        cmd = get_lr_spec_merge_cmd
     container: config['singularity']['autotop']
     group: 'subj' 
-    shell: 'wb_command -spec-file-merge {input.spec_files} {output}'
+    shell: '{params.cmd} {input.spec_files} {output}'
 
 
 
