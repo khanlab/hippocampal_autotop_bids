@@ -5,6 +5,7 @@ from astropy.convolution import convolve as nan_convolve
 
 logfile = open(snakemake.log[0], 'w')
 
+print(f'Starting laplace solver', file=logfile, flush=True)
 
 # this function solves the Laplace equation for Anterior-Posterior, Proximal-distal, and Inner-Outer axes of the hippocamps
 convergence_threshold = snakemake.params.convergence_threshold
@@ -13,8 +14,12 @@ max_iters = snakemake.params.max_iters
 
 # initialize foreground (gm), source, and sink
 
-lbl_nib = nib.load(snakemake.input.lbl)
+try:
+    lbl_nib = nib.load(snakemake.input.lbl)
+except:
+    lbl_nib = nib.load(snakemake.input.lbl[0])
 lbl = lbl_nib.get_fdata()
+print(f'Loaded lbl', file=logfile, flush=True)
 
 idxgm = np.zeros(lbl.shape)
 for i in snakemake.params.gm_labels:

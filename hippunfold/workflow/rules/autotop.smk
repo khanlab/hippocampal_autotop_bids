@@ -2,17 +2,26 @@ import os
 import numpy as np    
 
 
-def get_init_coords(wildcards):
+def get_cmd_laplace_coords(wildcards):
+    if config['skip_inject_template_labels']:
+        cmd = '../scripts/laplace_coords.py'
+    else:
+        cmd = '../scripts/laplace_coords_withinit.py'
+    return cmd
+
+def get_init_laplace(wildcards):
     if not config['skip_inject_template_labels']:
-        init = bids(root='work',datatype='seg_{modality}',**config['subj_wildcards'],dir='{dir}',suffix='coords.nii.gz',desc='init',space='corobl',hemi='{hemi}'),
-    elif config['skip_inject_template_labels']:
-        init = 'Nonexistant'
+        init_coords = bids(root='work',datatype='seg_{modality}',**config['subj_wildcards'],dir='{dir}',suffix='coords.nii.gz',desc='init',space='corobl',hemi='{hemi}'),
+    else:
+        init_coords = get_labels_for_laplace(wildcards)
+    return init_coords
 
 rule laplace_coords:
     input:
         lbl = get_labels_for_laplace,
+        init_coords = get_init_laplace
     params:
-        init_coords = get_init_coords,
+        cmd = get_cmd_laplace_coords,
         gm_labels = lambda wildcards: config['laplace_labels'][wildcards.dir]['gm'],
         src_labels = lambda wildcards: config['laplace_labels'][wildcards.dir]['src'],
         sink_labels = lambda wildcards: config['laplace_labels'][wildcards.dir]['sink'],
@@ -24,7 +33,7 @@ rule laplace_coords:
     resources:
         time = 30
     log: bids(root='logs',**config['subj_wildcards'],dir='{dir}',hemi='{hemi,Lflip|R}',modality='{modality}',suffix='laplace.txt')
-    script: '../scripts/laplace_coords_withinit.py'
+    script: '{params.cmd}'
 
 rule unflip_coords:
     input:

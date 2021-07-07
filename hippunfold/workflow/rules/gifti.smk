@@ -97,7 +97,7 @@ rule warp_gii_to_T1w:
         gii = bids(root='work',datatype='surf_{modality}',suffix='{surfname}.surf.gii', space='corobl',hemi='{hemi}', **config['subj_wildcards']),
         xfm = bids(root='work',datatype='anat',**config['subj_wildcards'],suffix='xfm.txt',from_='T1w',to='corobl',desc='affine',type_='ras'),
     output:
-        gii = bids(root='work',datatype='surf_{modality}',suffix='{surfname}.surf.gii', space='T1w',hemi='{hemi}', **config['subj_wildcards'])
+        gii = bids(root='work',datatype='surf_{modality}',suffix='{surfname}.surf.gii', space='cropT1w',hemi='{hemi}', **config['subj_wildcards'])
     container: config['singularity']['autotop']
     group: 'subj'
     shell:
