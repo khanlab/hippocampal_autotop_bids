@@ -155,6 +155,9 @@ parse_args:
     choices:
       - L
       - R
+    default:
+      - L
+      - R
 
   --derivatives:
     help: 'Path to the derivatives folder (e.g. for finding manual segs) (default: %(default)s) '
