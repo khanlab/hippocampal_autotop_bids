@@ -47,7 +47,8 @@ setuptools.setup(
         "seaborn",
         "jinja2",
         "pygraphviz",
-        "pygments"
+        "pygments",
+        "scikit-fmm"
     ],
     python_requires='>=3.7'
 )
