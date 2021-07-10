@@ -50,15 +50,11 @@ phi = np.ma.MaskedArray(phi,mask)
 backward = skfmm.travel_time(phi,np.ones_like(lbl))
 backward = backward.data
 # combine
-print(f'check1', file=logfile, flush=True)
 forward = forward/np.max(forward)
 backward = -backward/np.max(backward) +1
-print(f'check2', file=logfile, flush=True)
 init_coords = np.sqrt(np.square(forward) + np.square(backward))
 init_coords = init_coords/np.max(init_coords)
-print(f'check3', file=logfile, flush=True)
 init_coords[idxgm==0] = 0
-print(f'check4', file=logfile, flush=True)
 
 # set up filter (18NN)
 hl=np.zeros([3,3,3])
