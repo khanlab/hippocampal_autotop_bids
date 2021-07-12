@@ -1,0 +1,112 @@
+from os.path import join
+
+
+hemi = ['L','R']
+
+#Plan->Get vec to CO either through ants here or apply manually and then transform those manuals to corobl. Then get those corobl vectors to unfold using XFM, then apply grad dev
+
+rule all:
+    input:
+        cor = 'grad_IC_unfolded.vec0.nii.gz'
+
+#Takes in gradient vector and manually applies rotation from T1 to CO orientation
+rule resample_crop_L_to_corobl:
+    input: 
+        crop0 = 'APgradienttest_norm.nii.gz',
+	transform = 'sub-111312_desc-affine_from-T1w_to-corobl_type-itk_xfm.txt'
+    output:
+        cor = 'grad_IC_COtrans_cropT1space.nii.gz'
+    resources:
+    	mem_mb= 1000
+    script: 'rotate_vec.py'
+
+#Splits the T1 space, CO oriented vector
+rule split_nod:
+    input: 
+        nod = 'grad_IC_COtrans_cropT1space.nii.gz'
+    params: 
+        out_prefix = 'split_'
+    output:
+        nodsplit = expand('split_{idx:04d}.nii.gz',idx=range(3))
+    resources:
+    	mem_mb= 1000
+    shell: 'fslsplit {input.nod} {params.out_prefix} -t'
+
+#Makes the vector 5D for ants
+rule push_5D_vec:
+    input: 
+        split = expand('split_{idx:04d}.nii.gz',idx=range(3))
+    output:
+        push = 'grad_4Dto5D_IC.vec0.nii.gz'
+    resources:
+    	mem_mb= 800
+    shell: 'c3d {input.split} -omc {output.push}'
+
+#Take CO oriented vectors and now transform the space from T1 to CO
+rule nod_to_corobl_L:
+    input: 
+        nod = 'grad_4Dto5D_IC.vec0.nii.gz',
+	ref = 'coords-AP.nii.gz',
+	trans = 'sub-111312_desc-affine_from-T1w_to-corobl_type-itk_xfm.txt'
+    output:
+        nod = 'grad_IC_5D_crop.vec0.nii.gz'
+    resources:
+    	mem_mb= 2000
+    shell: 'antsApplyTransforms -d 3 -e 1 -n NearestNeighbor -i {input.nod} -r {input.ref} -t {input.trans} -o {output.nod}'
+
+#Split again
+rule pull_4D_vec:
+    input: 
+        split = 'grad_IC_5D_crop.vec0.nii.gz'
+    output:
+        push = expand('c3dsplit{idx:04d}.nii.gz',idx=range(3))
+    resources:
+    	mem_mb= 800
+    shell: 'c3d -mcs {input.split} -oo {output.push}'
+
+#Back to 4D vector. Inspecting this output looks correct, the vectors are oriented AP in CO space
+rule merge_L:
+    input: 
+        crop0 = expand('c3dsplit{idx:04d}.nii.gz',idx=range(3))
+    output:
+        push = 'grad_IC_corobl.vec0.nii.gz'
+    resources:
+    	mem_mb= 800
+    shell: 'fslmerge -t {output.push} {input.crop0}'
+
+#Takes in each X,Y,Z component of the CO vector and moves it to unfolded space (with the CO orientation still)
+rule resample_CO_to_unfold_L:
+    input: 
+        nod = 'c3dsplit{idx}.nii.gz',
+	ref = 'sub-111312_hemi-L_space-unfold_desc-subfields_dseg.nii.gz',
+	trans = 'sub-111312_hemi-L_from-corobl_to-unfold_mode-image_xfm.nii.gz'
+    output:
+        nod = 'grad_IC_COtrans_unfspace_{idx}.nii.gz'
+    resources:
+    	mem_mb= 1000
+    shell: 'antsApplyTransforms -d 3 -i {input.nod} -r {input.ref} -t {input.trans}  -o {output.nod}'
+
+#Merge CO orientation unfolded space components
+rule merge_unf_L:
+    input: 
+        crop0 = expand('grad_IC_COtrans_unfspace_{idx:04d}.nii.gz',idx=range(3))
+    output:
+        push = 'grad_IC_COtrans_unfspace.nii.gz'
+    resources:
+    	mem_mb= 700
+    shell: 'fslmerge -t {output.push} {input.crop0}'
+
+
+#Finally, manually rotate vectors to unfolded orientation using graddev
+rule rotate_corobl_to_unf_L:
+    input: 
+        crop0 = 'grad_IC_COtrans_unfspace.nii.gz',
+	grad = 'sub-111312_hemi-L_from-corobl_to-unfold_mode-image_graddev.nii.gz'
+    output:
+        cor = 'grad_IC_unfolded.vec0.nii.gz'
+    resources:
+    	mem_mb= 1000
+    script: 'apply_graddev.py'
+
+
+

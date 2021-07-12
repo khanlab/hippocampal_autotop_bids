@@ -95,6 +95,17 @@ rule create_warps:
 #rule extrapolate_warp_unfold2nii:
     
 
+
+rule fix_unfold2native_orient:
+    """Fix orientation issue with WarpITK_unfold2native.nii.gz (LPS to RPI)
+        TODO: fix this at the source (autotop)"""
+    input:
+        bids(root='work',**config['subj_wildcards'],suffix='autotop/WarpITK_unfold2native.nii',desc='cropped',space='corobl',hemi='{hemi}',modality='{modality}'),
+    output:
+        bids(root='work',**config['subj_wildcards'],suffix='autotop/WarpITK_unfold2native_RPI.nii',desc='cropped',space='corobl',hemi='{hemi}',modality='{modality}'),
+    group: 'subj'
+    shell: 'c3d -mcs {input} -orient RPI -omc {output}'
+
 #full-grid correction of unfolded space
 rule map_to_full_grid:
     input:
@@ -122,6 +133,7 @@ rule map_to_full_grid:
         '{params.script} {input.coords_ap} {input.coords_pd} {input.coords_io} {input.unfold_ref} {params.warp_dir} &> {log}'
 
 
+<<<<<<< HEAD
 rule compose_warps_corobl2unfold_rhemi:
     """ Compose corobl to unfold (unfold-template), for right hemi (ie no flip)"""
     input:
@@ -161,6 +173,16 @@ rule compose_warps_t1_to_unfold:
     container: config['singularity']['autotop'] 
     group: 'subj'
     shell: 'ComposeMultiTransform 3 {output} -R {input.ref} {input.corobl2unfold} {input.t1w2corobl}'
+
+
+  
+rule compute_jacobian:
+    input:
+        bids(root='results',datatype='seg_{modality}',**config['subj_wildcards'],suffix='xfm.nii.gz',hemi='{hemi}',from_='T1w',to='unfold',mode='image')
+    output:
+        bids(root='results',datatype='seg_{modality}',**config['subj_wildcards'],suffix='jacobian.nii.gz',hemi='{hemi}',from_='T1w',to='unfold',mode='image')
+    group: 'subj'
+    script: '../scripts/compute_jacobian.py'
 
 
 
