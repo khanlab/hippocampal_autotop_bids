@@ -97,12 +97,20 @@ rule warp_gii_to_T1w:
         gii = bids(root='work',datatype='surf_{modality}',den='{density}',suffix='{surfname}.surf.gii', space='corobl',hemi='{hemi}', **config['subj_wildcards']),
         xfm = bids(root='work',datatype='anat',**config['subj_wildcards'],suffix='xfm.txt',from_='T1w',to='corobl',desc='affine',type_='ras'),
     output:
-        gii = bids(root='results',datatype='surf_{modality}',den='{density}',suffix='{surfname}.surf.gii', space='T1w',hemi='{hemi}', **config['subj_wildcards'])
+        gii = bids(root='work',datatype='surf_{modality}',den='{density}',suffix='{surfname}.surf.gii', space='T1w',hemi='{hemi}', desc='nonancorrect', **config['subj_wildcards'])
     container: config['singularity']['autotop']
     group: 'subj'
     shell:
         'wb_command -surface-apply-affine {input.gii} {input.xfm} {output.gii}'
 
+rule correct_nan_vertices:
+    input: 
+        gii = bids(root='work',datatype='surf_{modality}',den='{density}',suffix='{surfname}.surf.gii', space='T1w',hemi='{hemi}', desc='nonancorrect', **config['subj_wildcards'])
+    output:
+        gii = bids(root='results',datatype='surf_{modality}',den='{density}',suffix='{surfname}.surf.gii', space='T1w',hemi='{hemi}', **config['subj_wildcards'])
+    container: config['singularity']['autotop']
+    group: 'subj'
+    script: '../scripts/fillnanvertices.py'
 
 #morphological features, calculated in T1w space:
 rule calculate_gyrification_from_surface:
