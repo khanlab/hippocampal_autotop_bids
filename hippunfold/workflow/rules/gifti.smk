@@ -55,7 +55,7 @@ rule warp_gii_unfold2native:
 # previous rule seems to be where nan vertices emerge, so we'll correct them here immediately after
 rule correct_nan_vertices:
     input: 
-        gii = bids(root='work',datatype='surf_{modality}',den='{density}',suffix='{surfname}.surf.gii', desc='nonancorrect', space='corobl',hemi='{hemi,R|Lflip}', **config['subj_wildcards'])
+        gii = bids(root='work',datatype='surf_{modality}',den='{density}',suffix='{surfname}.surf.gii', desc='nonancorrect', space='corobl',hemi='{hemi}', **config['subj_wildcards'])
     output:
         gii = bids(root='work',datatype='surf_{modality}',den='{density}',suffix='{surfname}.surf.gii', space='corobl',hemi='{hemi,R|Lflip}', **config['subj_wildcards'])
     container: config['singularity']['autotop']
